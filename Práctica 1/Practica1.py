@@ -1,6 +1,10 @@
 from scipy.io import arff
 from algorithms import *
+import numpy as np
 
-datos = arff.loadarff('Datos/wdbc.arff')[0]
+datalist = arff.loadarff('Datos/wdbc.arff')[0]
 
-print(runSFS(datos))
+categories = np.array([row[0] for row in datalist])
+data = np.array([[row[j] for j in range(1,len(row[0]))] for row in datalist], float)
+
+print(runSFS(data, categories))

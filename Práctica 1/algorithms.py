@@ -1,5 +1,6 @@
 from math import sqrt
 import numpy as np
+import time
 from random import *
 
 def distance(x,y):
@@ -16,46 +17,50 @@ def countingVotes(mins, categories):
 def kNN(k, data, categories, item):
     distances =  np.array([[i, distance(data[i],item)] for i in range(len(data))], float)
     mins = []
+    distances_i = np.array(distances)
     for i in range(k):
-        distances_i = np.array([distances[j] for j in range(len(data)-1) if not j in mins], float)
         loc_min_distance = np.array([row[1] for row in distances_i], float).argmin()
         mins.append(distances_i[loc_min_distance,0])
+        distances_i = np.delete(distances_i,loc_min_distance,0)
 
     return countingVotes(mins, categories)
 
 def greedySFS(train_data, train_categ):
     num_features = len(train_data[0])
 
-    solution = np.zeros(num_features, int)
-    profit_v = np.zeros(num_features, int)
+    solution = np.zeros(num_features, bool)
     exists_profit = True
     previous_profit = 0
 
     while(exists_profit):
-        for feat in [i for i in range(len(profit_v)) if solution[i]==0]:
+        features = np.array(range(num_features))
+        features = features[solution == False]
+        profit_v = np.zeros(num_features, int)
+        for feat in features:
+            current_sol = np.array(solution)
+            current_sol[feat] = True
             for i in range(len(train_data)):
-                train_feats = np.array([[train_data[j,k] for k in range(num_features) if (k==feat or solution[k]==1)] for j in range(len(train_data)) if j != i], float)
-                item = np.array([train_data[i,j] for j in range(num_features) if (j==feat or solution[j]==1)], float)
+                train_feats = np.delete(train_data[:,current_sol],i,0)
+                item = np.array(train_data[i,current_sol], float)
                 cat = kNN(3,train_feats, train_categ, item)
                 correct = (cat == train_categ[i])
                 if(correct):
                     profit_v[feat] += 1
 
-        print(profit_v)
         current_profit = profit_v.max()
         exists_profit = current_profit > previous_profit
         if(exists_profit):
-            solution[profit_v.argmax()] = 1
+            solution[profit_v.argmax()] = True
             previous_profit = current_profit
-        profit_v = np.zeros(num_features, int)
 
     return solution
 
-def runSFS(data, categories, iterations = 10):
+def runSFS(data, categories, iterations = 1):
     corrects_vector = []
 
     for i in np.arange(iterations,dtype=int):
         print("Iteration ", i)
+        start = time.time()
         rnd_subject = np.random.randint(0,len(data),len(data)//2)
         training_data = np.array([data[j] for j in rnd_subject ], float)
         training_categ = np.array([categories[j] for j in rnd_subject ])
@@ -65,14 +70,17 @@ def runSFS(data, categories, iterations = 10):
 
         solution = greedySFS(training_data, training_categ)
         corrects = 0
-        print(solution)
-        train_feats = np.array([[row[k] for k in solution if k==1] for row in training_data], float)
+        train_feats = np.array([row[solution] for row in training_data], float)
 
         for j in range(len(eval_data)):
-            item = [eval_data[j,k] for k in solution if k==1]
+            item = eval_data[j,solution]
             if(kNN(3,train_feats, training_categ, item) == eval_categ[j]):
                 corrects += 1
 
         corrects_vector.append(corrects/len(eval_data)*100)
-        print(corrects_vector)
+        end = time.time()
+        print("Rate = " + str(corrects_vector) + "\nTime = " + str(end-start) + " s")
+
+
+
     return np.array(corrects_vector).mean()

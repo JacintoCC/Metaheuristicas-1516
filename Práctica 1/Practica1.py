@@ -21,6 +21,7 @@ random_ppio = cdll.LoadLibrary('./Random_ppio/random_ppio.so')
 """
 database_name = 'Datos/'
 db_options = {'W': 'wdbc', 'L': 'movement_libras', 'A':'arrhythmia'}
+class_row = {'W': 0, 'L': 90, 'A':278}
 
 parser = argparse.ArgumentParser(description='')
 parser.add_argument('DB', choices=['W','L','A'],
@@ -34,8 +35,8 @@ random_ppio.Set_random(args.seed)
 opt = args.DB
 database_name += db_options[args.DB] + '.arff'
 database = arff.loadarff(database_name)[0]
-categories = np.array([row[0] for row in database])
-data = np.array( [[row[j]   for j in range(1, len(database[0]))]
+categories = np.array([row[class_row[args.DB]] for row in database])
+data = np.array( [[row[j]   for j in range(len(database[0])) if j!=class_row[args.DB]]
                             for row in database])
 
 print("Seed = " + str(random_ppio.Get_random()))

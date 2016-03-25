@@ -52,6 +52,7 @@ def makePartitions(data, categories, num_partitions = 2):
         partitions_d[num_partitions-1].append(data_categorized[j][(num_partitions-1)*len_cat_partitions[j]:])
         partitions_c[num_partitions-1].append(np.repeat(set_cat[j],list(categories).count(set_cat[j])-(num_partitions-1)*len_cat_partitions[j]))
 
-    partitions_d=[[item for sublist in partition for item in sublist ] for partition in partitions_d]
+    partitions_d=[np.array([item for sublist in partition for item in sublist ],float) for partition in partitions_d]
+    partitions_c=[np.array([item for sublist in partition for item in sublist ]) for partition in partitions_c]
 
     return([np.array(partitions_d,object),np.array(partitions_c,object)])

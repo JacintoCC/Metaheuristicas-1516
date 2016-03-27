@@ -1,23 +1,12 @@
 import numpy as np
-"""
-    Importación del generador de números aleatorios en C
-"""
-try:
-    from ctypes import *
-except ImportError:
-    print('ERROR! La biblioteca *ctypes* para Python no esta disponible.')
-    sys.exit(-1)
 
-random_ppio = cdll.LoadLibrary('./Random_ppio/random_ppio.so')
-random_ppio.Set_random(124)
-
-def permutation(x):
+def permutation(x, random):
     for i in range(len(x)):
-        j = random_ppio.Randint(0, len(x)-1)
+        j = random.Randint(0, len(x)-1)
         x[i], x[j] = x[j], x[i]
     return x
 
-def makePartitions(data, categories, num_partitions = 2):
+def makePartitions(data, categories, random, num_partitions = 2):
     # Calculamos la longitud que tendrá cada partición
     data_copy = np.copy(data)
     len_partition = len(data)//num_partitions
@@ -40,7 +29,7 @@ def makePartitions(data, categories, num_partitions = 2):
 
     # Hacemos una permutación por los datos categorizados
     for row in data_categorized:
-        row = permutation(row)
+        row = permutation(row, random)
 
     #Repartimos en las particiones
     for i in range(num_partitions-1):

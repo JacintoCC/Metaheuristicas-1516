@@ -1,11 +1,11 @@
 import numpy as np
-from sklearn import neighbors
 from sklearn.preprocessing import MinMaxScaler
-from sklearn import cross_validation
+from BasicFunctions import getRateL1O
 
 # Selección de todas las características para algoritmo a comparar
 def kNNSolution(train_data, train_categ):
     return np.repeat(1,len(train_data[0]))
+
 
 # Selección de la mejor característica
 def getBetterFeature(train_data, train_categ, solution):
@@ -16,27 +16,12 @@ def getBetterFeature(train_data, train_categ, solution):
     features = features[solution == False]
     profit_v = np.zeros(num_features, int)
 
-    # Creación del clasificador
-    nbrs =  neighbors.KNeighborsClassifier(3)
-
     for feat in features:
-        # Activamos cada una de estas características
+        # Activamos  y proyectamos por cada una de estas características
         solution[feat] = True
-
-        leave_1_out_iterators = cross_validation.LeaveOneOut(len(train_data))
-
-        # Proyectamos por las columnas seleccionadas
         data_w_fratures = train_data[:,solution]
 
-        # Para cada dato, hacemos kNN con las características activas y el conjunto de entrenamiento
-        for train_index, test_index in leave_1_out_iterators:
-            d_train = data_w_fratures[train_index]
-            d_test = data_w_fratures[test_index]
-            l_train = train_categ[train_index]
-            l_test = train_categ[test_index]
-
-            nbrs.fit(d_train, l_train)
-            profit_v[feat] += 100*nbrs.score(d_test, l_test)
+        profit_v[feat] = getRateL1O(data_w_fratures, train_categ)
 
         # Desactivamos la característica activada
         solution[feat] = False

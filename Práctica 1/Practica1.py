@@ -1,13 +1,14 @@
+import sys
+import argparse
+import time
+import numpy as np
 from scipy.io import arff
+from BasicFunctions import *
 from greedySFS import *
 from localSearch import *
 from simulatedAnnealing import *
 from tabuSearch import *
-from BasicFunctions import *
-import time
-import numpy as np
-import argparse
-import sys
+
 
 """
     Importación del generador de números aleatorios en C

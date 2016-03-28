@@ -1,11 +1,34 @@
 import numpy as np
+from sklearn import neighbors
+from sklearn import cross_validation
 
+
+# Obtención de la tasa de acierto para unos datos de entrenamiento con Leave One Out
+def getRateL1O(data,labels):
+    rate = 0
+    leave_1_out_iterators = cross_validation.LeaveOneOut(len(data))
+    # Creación del clasificador
+    nbrs =  neighbors.KNeighborsClassifier(3)
+    # Para cada dato, hacemos kNN
+    for train_index, test_index in leave_1_out_iterators:
+        d_train = data[train_index]
+        d_test = data[test_index]
+        l_train = labels[train_index]
+        l_test = labels[test_index]
+        # Entrenamiento y obtención de la tasa de acierto
+        nbrs.fit(d_train, l_train)
+        rate += 100*nbrs.score(d_test,[l_test])
+
+    return rate
+
+# Realizar permutación sobre un vector
 def permutation(x, random):
     for i in range(len(x)):
         j = random.Randint(0, len(x)-1)
         x[i], x[j] = x[j], x[i]
     return x
 
+# Realizar particiones en un conjunto repartiendo según las etiquetas
 def makePartitions(data, categories, random, num_partitions = 2):
     # Calculamos la longitud que tendrá cada partición
     data_copy = np.copy(data)

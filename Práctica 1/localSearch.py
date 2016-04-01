@@ -15,7 +15,7 @@ def localSearch(train_data, train_categ):
 
     while(exists_profit):
         exists_profit = False
-        first_neigh = random.Randint(0,num_features-1)
+        first_neigh = np.random.randint(0,num_features-1)
         last_neigh = (first_neigh-1)%num_features
         i = first_neigh
 
@@ -25,7 +25,7 @@ def localSearch(train_data, train_categ):
             data_w_fratures = train_data[:,solution]
 
             # Medimos la tasa de acierto con este cambio
-            current_profit = getRateL1O(train_data[:solution],train_categ)
+            current_profit = getRateL1O(data_w_fratures,train_categ)
 
             # Si mejora la solución nos quedamos con este cambio
             exists_profit = current_profit > previous_profit

@@ -1,3 +1,58 @@
+import numpy as np
+from sklearn.preprocessing import MinMaxScaler
+from BasicFunctions import getRateL1O
+
+# Función para cambiar el valor i-ésimo de s
+def flip(s, i):
+    s[i] = not s[i]
+
+# Función para actualizar el valor de la temperatura
+def updateTemp(t_k, beta):
+    return t_k/(1+beta*t_k)
+
 # Enfriamiento Simulado
 def simAnnealing(train_data, train_categ):
-    return 0
+    num_features = len(train_data[0])
+    max_neighbours = 10 * num_features
+
+    # Partimos de un vector solución aleatorio
+    solution = np.random.random(size=num_features)<0.5
+    cost_current_sol = getRateL1O(train_data[:,solution],train_categ)
+
+    # Mejor solución encontrada
+    best_solution = solution
+    cost_best_sol = cost_current_sol
+
+    # Establecemos la temperatura inicial y final
+    temp_0 = 0.3 * cost_best_sol / -np.log(0.3)
+    temp_final = 0.001 if temp_0 > 0.001 else temp_0*0.01
+
+    # Inicializamos las variables que controlan el bucle
+    temp = temp_0
+    num_checks = 1
+    max_checks = 15000
+
+    beta = (temp_0 - temp_final) / (max_checks/pow(max_neighbours,2))*temp_0*temp_final
+
+    while num_checks < 15000 and temp > temp_final:
+        for i in range(max_neighbours):
+            j = np.random.randint(0, num_features-1)
+            flip(solution, j)
+
+            cost_last_sol =  getRateL1O(train_data[:,solution], train_categ)
+            improvement = cost_last_sol - cost_current_sol
+
+            if improvement < 0 or np.random.random() < np.exp(-improvement/temp):
+                cost_current_sol = cost_last_sol
+
+                if cost_last_sol > cost_best_sol:
+                    best_solution = solution
+                    cost_best_sol = cost_current_sol
+            else:
+                flip(solution, j)
+
+            num_checks += 1
+
+        temp = updateTemp(temp, beta)
+
+    return solution

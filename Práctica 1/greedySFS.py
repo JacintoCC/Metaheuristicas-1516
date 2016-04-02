@@ -1,5 +1,4 @@
 import numpy as np
-from sklearn.preprocessing import MinMaxScaler
 from BasicFunctions import getRateL1O
 
 # Selección de todas las características para algoritmo a comparar

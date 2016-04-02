@@ -2,6 +2,9 @@ import numpy as np
 from sklearn import neighbors
 from sklearn import cross_validation
 
+# Función para cambiar el valor i-ésimo de s
+def flip(s, i):
+    s[i] = not s[i]
 
 # Obtención de la tasa de acierto para unos datos de entrenamiento con Leave One Out
 def getRateL1O(data,labels):
@@ -17,7 +20,7 @@ def getRateL1O(data,labels):
         l_test = labels[test_index]
         # Entrenamiento y obtención de la tasa de acierto
         nbrs.fit(d_train, l_train)
-        rate += 100*nbrs.score(d_test,[l_test])
+        rate += nbrs.score(d_test,[l_test])
 
     return rate
 

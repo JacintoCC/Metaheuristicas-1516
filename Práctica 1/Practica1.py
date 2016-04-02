@@ -3,6 +3,7 @@ import argparse
 import time
 import numpy as np
 from scipy.io import arff
+from sklearn.preprocessing import MinMaxScaler
 from BasicFunctions import *
 from greedySFS import *
 from localSearch import *
@@ -33,7 +34,7 @@ class_row = {'W': 0, 'L': 90, 'A':278}
 parser = argparse.ArgumentParser(description='')
 parser.add_argument('DB', choices=['W','L','A'],
                    help='DB to use. W -> WDBC;   L -> Libras;   A -> Arrythmia')
-parser.add_argument('-a', choices=['K','G','L','S','T','A'],
+parser.add_argument('-a', choices=['K','G','L','S','T'],
                   help='Algorithm to use. K -> kNN; G -> Greedy; L -> Local Search; S -> Simulated annealing; T -> Tabu Search', default='K')
 parser.add_argument('-seed', type=int,
                    help='Seed to random generator. Default=314159', default=314159)
@@ -41,6 +42,7 @@ parser.add_argument('-seed', type=int,
 
 args = parser.parse_args()
 random_ppio.Set_random(args.seed)
+np.random.seed(args.seed)
 
 opt = args.DB
 database_name += db_options[args.DB] + '.arff'

@@ -1,5 +1,4 @@
 import numpy as np
-from sklearn.preprocessing import MinMaxScaler
 from BasicFunctions import getRateL1O
 
 # Algoritmo de búsqueda local que devuelve una selección de características

@@ -1,10 +1,5 @@
 import numpy as np
-from sklearn.preprocessing import MinMaxScaler
-from BasicFunctions import getRateL1O
-
-# Función para cambiar el valor i-ésimo de s
-def flip(s, i):
-    s[i] = not s[i]
+from BasicFunctions import getRateL1O, flip
 
 # Función para actualizar el valor de la temperatura
 def updateTemp(t_k, beta):
@@ -31,27 +26,32 @@ def simAnnealing(train_data, train_categ):
     temp = temp_0
     num_checks = 1
     max_checks = 15000
+    num_successes = 1
+    max_successes = 0.1 * max_neighbours
 
     beta = (temp_0 - temp_final) / (max_checks/pow(max_neighbours,2))*temp_0*temp_final
 
-    while num_checks < 15000 and temp > temp_final:
-        for i in range(max_neighbours):
+    while num_successes > 0 and num_checks < max_checks and temp > temp_final:
+        num_successes = 0
+        i = 0
+        while num_successes < max_successes and i < max_neighbours and num_checks < max_checks:
             j = np.random.randint(0, num_features-1)
             flip(solution, j)
 
             cost_last_sol =  getRateL1O(train_data[:,solution], train_categ)
             improvement = cost_last_sol - cost_current_sol
 
-            if improvement < 0 or np.random.random() < np.exp(-improvement/temp):
+            if improvement != 0 and (improvement > 0 or np.random.random() < np.exp(improvement/temp)):
                 cost_current_sol = cost_last_sol
-
+                num_successes += 1
                 if cost_last_sol > cost_best_sol:
-                    best_solution = solution
+                    best_solution = np.copy(solution)
                     cost_best_sol = cost_current_sol
             else:
                 flip(solution, j)
 
             num_checks += 1
+            i += 1
 
         temp = updateTemp(temp, beta)
 

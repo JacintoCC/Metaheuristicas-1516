@@ -33,19 +33,21 @@ def tabuSearch(train_data, train_categ):
         rates[rates[:,1].argsort()]
 
         for j in range(max_neighbours):
+            feature_selected = rates[j,0]
+
             if rates[j,1] > cost_best_sol:
                 cost_best_sol =  rates[j,1]
                 best_solution = np.copy(solution)
                 choosen = True
-            elif rates[j,0] not in tabu_list:
+            elif feature_selected not in tabu_list:
                 choosen = True
             else:
                 choosen = False
 
             if(choosen):
-                print("\nMejor vecino\t" + str(rates[j,0]) + "\nTasa de acierto \t" + str(rates[j,1]))
-                flip(solution, rates[j,0])
-                tabu_list[tabu_index] = rates[j,0]
+                print("\nMejor vecino\t" + str(feature_selected) + "\nTasa de acierto \t" + str(rates[j,1]))
+                flip(solution, feature_selected)
+                tabu_list[tabu_index] = feature_selected
                 tabu_index = (tabu_index+1)%len(tabu_list)
                 break
 

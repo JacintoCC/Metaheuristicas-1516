@@ -9,7 +9,7 @@ from greedySFS import *
 from localSearch import *
 from simulatedAnnealing import *
 from tabuSearch import *
-
+from extendedTabuSearch import *
 
 """
     Importación del generador de números aleatorios en C
@@ -28,15 +28,17 @@ random_ppio = cdll.LoadLibrary('./Random_ppio/random_ppio.so')
 """
 database_name = 'Datos/'
 db_options = {'W': 'wdbc', 'L': 'movement_libras', 'A':'arrhythmia'}
-alg_options = {'K': kNNSolution, 'G': greedySFS, 'L': localSearch, 'S':simAnnealing, 'T': tabuSearch}
-alg_names = {'K': "Simple KNN", 'G': "Greedy SFS", 'L': "Local search", 'S':"Simulated annealing", 'T': "Tabu seach"}
+alg_options = {'K': kNNSolution, 'G': greedySFS, 'L': localSearch, 'S':simAnnealing, 'T': tabuSearch, 'E': extendedTabuSearch}
+alg_names = {'K': "Simple KNN", 'G': "Greedy SFS", 'L': "Local search", 'S':"Simulated annealing", 'T': "Tabu seach", 'E': "Extended Tabu Search"}
 class_row = {'W': 0, 'L': 90, 'A':278}
 
 parser = argparse.ArgumentParser(description='')
 parser.add_argument('DB', choices=['W','L','A'],
                    help='DB to use. W -> WDBC;   L -> Libras;   A -> Arrythmia')
-parser.add_argument('-a', choices=['K','G','L','S','T'],
-                  help='Algorithm to use. K -> kNN; G -> Greedy; L -> Local Search; S -> Simulated annealing; T -> Tabu Search', default='K')
+parser.add_argument('-a', choices=['K','G','L','S','T','E'],
+                  help='Algorithm to use. K -> kNN; G -> Greedy; L -> Local Search; S -> Simulated annealing; T -> Tabu Search; E -> Extended Tabu Search', default='K')
+parser.add_argument('-latex', type=bool,
+                   help='True to format the output', default=False)
 parser.add_argument('-seed', type=int,
                    help='Seed to random generator. Default=314159', default=314159)
 
@@ -91,7 +93,7 @@ def runAlgorithm(data, categories, function, iterations = 5, num_partitions = 2)
     return results_table
 
 def  resultsToLatex(name_alg, name_db, results):
-    f = open(name_alg+'-'+name_db+'.tex','w')
+    f = open('\Resultados\\'+name_alg+'-'+name_db+'.tex','w')
     f.write("\\begin{table}[]\n")
     f.write("\centering\n")
     f.write("\label{" + name_alg + "-"  + name_db+"}\n")
@@ -110,4 +112,7 @@ def  resultsToLatex(name_alg, name_db, results):
     f.write("\caption{" + name_alg + "-"  + name_db+"}\n")
     f.write('\end{table} \n')
 
-resultsToLatex(alg_names[args.a], db_options[args.DB] ,runAlgorithm(data, categories, alg_options[args.a]))
+if(args.latex):
+    resultsToLatex(alg_names[args.a], db_options[args.DB] ,runAlgorithm(data, categories, alg_options[args.a]))
+else:
+    print(runAlgorithm(data, categories, alg_options[args.a]))

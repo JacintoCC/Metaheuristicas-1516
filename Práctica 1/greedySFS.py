@@ -3,7 +3,9 @@ from BasicFunctions import getRateL1O
 
 # Selección de todas las características para algoritmo a comparar
 def kNNSolution(train_data, train_categ):
-    return np.repeat(1,len(train_data[0]))
+    solution = np.repeat(1,len(train_data[0]))
+    rate_in = getRateL1O(train_data,train_categ)
+    return [solution,rate_in]
 
 
 # Selección de la mejor característica

@@ -29,7 +29,7 @@ random_ppio = cdll.LoadLibrary('./Random_ppio/random_ppio.so')
 database_name = 'Datos/'
 db_options = {'W': 'wdbc', 'L': 'movement_libras', 'A':'arrhythmia'}
 alg_options = {'K': kNNSolution, 'G': greedySFS, 'L': localSearch, 'S':simAnnealing, 'T': tabuSearch, 'E': extendedTabuSearch}
-alg_names = {'K': "Simple KNN", 'G': "Greedy SFS", 'L': "Local search", 'S':"Simulated annealing", 'T': "Tabu seach", 'E': "Extended Tabu Search"}
+alg_names = {'K': "KNN", 'G': "SFS", 'L': "LS", 'S':"SA", 'T': "TS", 'E': "ETS"}
 class_row = {'W': 0, 'L': 90, 'A':278}
 
 parser = argparse.ArgumentParser(description='')
@@ -37,8 +37,8 @@ parser.add_argument('DB', choices=['W','L','A'],
                    help='DB to use. W -> WDBC;   L -> Libras;   A -> Arrythmia')
 parser.add_argument('-a', choices=['K','G','L','S','T','E'],
                   help='Algorithm to use. K -> kNN; G -> Greedy; L -> Local Search; S -> Simulated annealing; T -> Tabu Search; E -> Extended Tabu Search', default='K')
-parser.add_argument('-latex', type=bool,
-                   help='True to format the output', default=False)
+parser.add_argument('-write', type=bool,
+                   help='True to format the output and save it in a .csv file', default=False)
 parser.add_argument('-seed', type=int,
                    help='Seed to random generator. Default=314159', default=314159)
 
@@ -92,27 +92,21 @@ def runAlgorithm(data, categories, function, iterations = 5, num_partitions = 2)
 
     return results_table
 
-def  resultsToLatex(name_alg, name_db, results):
-    f = open('\Resultados\\'+name_alg+'-'+name_db+'.tex','w')
-    f.write("\\begin{table}[]\n")
-    f.write("\centering\n")
-    f.write("\label{" + name_alg + "-"  + name_db+"}\n")
-    f.write('\\begin{tabular}{|c|c|c|c|c|}\n')
-    f.write("\hline  & \%Clas. in & \% Clas. out & \% red. & T \\\\ \hline \n")
+def  resultsToCSV(name_alg, name_db, results):
+    f = open('Resultados/'+name_db+name_alg+'.csv','w')
+    f.write(", Clas. in, Clas. out, red., T\n")
 
     for i in range(len(results)):
-        row = 'Partición ' + str(i//2+1) + '-' + str(i%2+1)
+        row = 'Particion ' + str(i//2+1) + '-' + str(i%2+1)
         for num in results[i]:
-            row += ' & ' + str(num)
-        f.write(row +  ' \\\\ \hline \n')
+            row += ', ' + str(num)
+        f.write(row +  '\n')
 
     mean_results = np.mean(results, axis=0)
-    f.write('Media & ' + str(mean_results[0]) + ' & ' + str(mean_results[1]) + ' & ' + str(mean_results[2]) + ' & ' + str(mean_results[3]) + '\\\\ \hline \n')
-    f.write('\end{tabular} \n')
-    f.write("\caption{" + name_alg + "-"  + name_db+"}\n")
-    f.write('\end{table} \n')
+    f.write('Media, ' + str(mean_results[0]) + ', ' + str(mean_results[1]) + ', ' + str(mean_results[2]) + ', ' + str(mean_results[3]) + '\n')
+    f.close()
 
-if(args.latex):
-    resultsToLatex(alg_names[args.a], db_options[args.DB] ,runAlgorithm(data, categories, alg_options[args.a]))
+if(args.write):
+    resultsToCSV(alg_names[args.a], args.DB.lower() ,runAlgorithm(data, categories, alg_options[args.a]))
 else:
     print(runAlgorithm(data, categories, alg_options[args.a]))

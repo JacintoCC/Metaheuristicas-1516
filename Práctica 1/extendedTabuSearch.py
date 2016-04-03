@@ -4,7 +4,7 @@ from BasicFunctions import getRateL1O, flip
 
 # Función para reinicializar solución según la frecuencia
 def restartSolutionFreq(frequencies):
-    sum_solutions = sum(frequencies)
+    num_solutions = sum(frequencies)
     return np.array([random()< 1-freq_i/num_solutions for freq_i in frequencies],bool)
 
 # Función para modificar el tamaño de la lista tabú

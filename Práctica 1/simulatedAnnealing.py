@@ -35,7 +35,7 @@ def simAnnealing(train_data, train_categ):
         num_successes = 0
         i = 0
         while num_successes < max_successes and i < max_neighbours and num_checks < max_checks:
-            j = np.random.randint(0, num_features-1)
+            j = np.random.randint(0, num_features)
             flip(solution, j)
 
             cost_last_sol =  getRateL1O(train_data[:,solution], train_categ)

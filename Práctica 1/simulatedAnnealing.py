@@ -29,7 +29,7 @@ def simAnnealing(train_data, train_categ):
     num_successes = 1
     max_successes = 0.1 * max_neighbours
 
-    beta = (temp_0 - temp_final) / (max_checks/pow(max_neighbours,2))*temp_0*temp_final
+    beta = (temp_0 - temp_final) / (max_checks/max_neighbours)*temp_0*temp_final
 
     while num_successes > 0 and num_checks < max_checks and temp > temp_final:
         num_successes = 0
@@ -55,4 +55,4 @@ def simAnnealing(train_data, train_categ):
 
         temp = updateTemp(temp, beta)
 
-    return [best_solution,cost_best_solution]
+    return [best_solution,cost_best_sol]

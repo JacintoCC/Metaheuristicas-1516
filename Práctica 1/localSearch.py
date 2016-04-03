@@ -21,10 +21,10 @@ def localSearch(train_data, train_categ):
         while not exists_profit and i != last_neigh:
             # Cambiamos cada una de estas características y proyectamos
             solution[i] = not solution[i]
-            data_w_fratures = train_data[:,solution]
+            data_w_features = train_data[:,solution]
 
             # Medimos la tasa de acierto con este cambio
-            current_profit = getRateL1O(data_w_fratures,train_categ)
+            current_profit = getRateL1O(data_w_features,train_categ)
 
             # Si mejora la solución nos quedamos con este cambio
             exists_profit = current_profit > previous_profit
@@ -39,4 +39,4 @@ def localSearch(train_data, train_categ):
             i = (i+1)%num_features
 
 
-    return solution
+    return [solution, previous_profit]

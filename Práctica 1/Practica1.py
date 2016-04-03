@@ -29,6 +29,7 @@ random_ppio = cdll.LoadLibrary('./Random_ppio/random_ppio.so')
 database_name = 'Datos/'
 db_options = {'W': 'wdbc', 'L': 'movement_libras', 'A':'arrhythmia'}
 alg_options = {'K': kNNSolution, 'G': greedySFS, 'L': localSearch, 'S':simAnnealing, 'T': tabuSearch}
+alg_names = {'K': "Simple KNN", 'G': "Greedy SFS", 'L': "Local search", 'S':"Simulated annealing", 'T': "Tabu seach"}
 class_row = {'W': 0, 'L': 90, 'A':278}
 
 parser = argparse.ArgumentParser(description='')
@@ -55,7 +56,7 @@ print("Seed = " + str(random_ppio.Get_random()))
 
 # Función para ejecutar y probar los algoritmos de búsqueda de soluciones
 def runAlgorithm(data, categories, function, iterations = 5, num_partitions = 2):
-    results_table = np.empty([iterations*num_partitions,3], dtype=float)
+    results_table = np.empty([iterations*num_partitions,4], dtype=float)
     scaler = MinMaxScaler()
     data = scaler.fit_transform(data)
 
@@ -72,19 +73,41 @@ def runAlgorithm(data, categories, function, iterations = 5, num_partitions = 2)
             test_data = np.array([partition[0][k][l] for k in range(num_partitions) if k!=j for l in range(len(partition[0][k]))], float)
             test_categ = np.array([partition[1][k][l] for k in range(num_partitions) if k!=j for l in range(len(partition[1][k]))])
 
-            solution = function(training_data, training_categ)
+            solution, train_rate = function(training_data, training_categ)
+
+            end = time.time()
 
             nbrs =  neighbors.KNeighborsClassifier(3)
             nbrs.fit(training_data[:,solution],training_categ)
             rate = 100*nbrs.score(test_data[:,solution], test_categ)
 
-            end = time.time()
-            results_table[i*num_partitions+j,0] = rate
-            results_table[i*num_partitions+j,1] = (1 - sum(solution)/len(training_data[0]))*100
-            results_table[i*num_partitions+j,2] = end-start
+            results_table[i*num_partitions+j,0] = train_rate/len(training_data)*100
+            results_table[i*num_partitions+j,1] = rate
+            results_table[i*num_partitions+j,2] = (1 - sum(solution)/len(training_data[0]))*100
+            results_table[i*num_partitions+j,3] = end-start
 
             print("Rate = " + str(rate) + "\nTime = " + str(end-start) + " s")
 
     return results_table
 
-print(runAlgorithm(data, categories, alg_options[args.a]))
+def  resultsToLatex(name_alg, name_db, results):
+    f = open(name_alg+'-'+name_db+'.tex','w')
+    f.write("\\begin{table}[]\n")
+    f.write("\centering\n")
+    f.write("\label{" + name_alg + "-"  + name_db+"}\n")
+    f.write('\\begin{tabular}{|c|c|c|c|c|}\n')
+    f.write("\hline  & \%Clas. in & \% Clas. out & \% red. & T \\\\ \hline \n")
+
+    for i in range(len(results)):
+        row = 'Partición ' + str(i//2+1) + '-' + str(i%2+1)
+        for num in results[i]:
+            row += ' & ' + str(num)
+        f.write(row +  ' \\\\ \hline \n')
+
+    mean_results = np.mean(results, axis=0)
+    f.write('Media & ' + str(mean_results[0]) + ' & ' + str(mean_results[1]) + ' & ' + str(mean_results[2]) + ' & ' + str(mean_results[3]) + '\\\\ \hline \n')
+    f.write('\end{tabular} \n')
+    f.write("\caption{" + name_alg + "-"  + name_db+"}\n")
+    f.write('\end{table} \n')
+
+resultsToLatex(alg_names[args.a], db_options[args.DB] ,runAlgorithm(data, categories, alg_options[args.a]))

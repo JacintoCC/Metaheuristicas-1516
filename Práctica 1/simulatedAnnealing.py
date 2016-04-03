@@ -55,4 +55,4 @@ def simAnnealing(train_data, train_categ):
 
         temp = updateTemp(temp, beta)
 
-    return solution
+    return [best_solution,cost_best_solution]

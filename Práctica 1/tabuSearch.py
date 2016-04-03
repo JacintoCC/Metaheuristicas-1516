@@ -15,10 +15,10 @@ def tabuSearch(train_data, train_categ):
     cost_best_sol = cost_current_sol
 
     # Determinamos el número de iteraciones
-    max_iter = 15000/max_neighbours
+    max_iter = 15000//max_neighbours
 
     # Lista tabú
-    tabu_list = np.array([-1 for i in range(num_features/3)])
+    tabu_list = np.array([-1 for i in range(num_features//3)])
     tabu_index = 0
     choosen = False
 
@@ -27,7 +27,7 @@ def tabuSearch(train_data, train_categ):
         rates = np.array([[j,0] for j in neighbors], object)
         for j in range(max_neighbours):
             flip(solution, neighbors[j])
-            rates[j, 1] = getRateL1O(training_data[:,solution],train_categ)
+            rates[j, 1] = getRateL1O(train_data[:,solution],train_categ)
             flip(solution, neighbors[j])
 
         rates[rates[:,1].argsort()]
@@ -35,6 +35,7 @@ def tabuSearch(train_data, train_categ):
         for j in range(max_neighbours):
             if rates[j,1] > cost_best_sol:
                 cost_best_sol =  rates[j,1]
+                best_solution = np.copy(solution)
                 choosen = True
             elif rates[j,0] not in tabu_list:
                 choosen = True
@@ -42,9 +43,11 @@ def tabuSearch(train_data, train_categ):
                 choosen = False
 
             if(choosen):
+                print("\nMejor vecino\t" + str(rates[j,0]) + "\nTasa de acierto \t" + str(rates[j,1]))
                 flip(solution, rates[j,0])
                 tabu_list[tabu_index] = rates[j,0]
                 tabu_index = (tabu_index+1)%len(tabu_list)
+                break
 
 
-    return solution
+    return [best_solution, cost_best_solution]

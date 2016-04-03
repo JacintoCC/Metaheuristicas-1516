@@ -46,4 +46,4 @@ def greedySFS(train_data, train_categ):
             solution[max_position] = True
             previous_profit = current_profit
 
-    return solution
+    return [solution, previous_profit]

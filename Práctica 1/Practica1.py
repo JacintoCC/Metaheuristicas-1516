@@ -94,7 +94,7 @@ def runAlgorithm(data, categories, function, iterations = 5, num_partitions = 2)
 
 def  resultsToCSV(name_alg, name_db, results):
     f = open('Resultados/'+name_db+name_alg+'.csv','w')
-    f.write(", Clas. in, Clas. out, red., T\n")
+    f.write("partition,in,out,red,T\n")
 
     for i in range(len(results)):
         row = 'Particion ' + str(i//2+1) + '-' + str(i%2+1)

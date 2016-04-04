@@ -34,12 +34,15 @@
 	columns/0/.style={column name = , string type},
 	columns/tA/.style={column name =T},
 	columns/tL/.style={column name =T},
+	columns/Clas. in/.style={column name =\%Clas. in},
+	columns/Clas. out/.style={column name =\%Clas. out},
+	columns/red./.style={column name =\%red.},
 	columns/inL/.style={column name =\%Clas. in},	
 	columns/inA/.style={column name =\%Clas. in},	
 	columns/outL/.style={column name =\%Clas. out},	
 	columns/outA/.style={column name =\%Clas. out},
-	columns/redL/.style={column name =\%red},	
-	columns/redA/.style={column name =\%red},
+	columns/redL/.style={column name =\%red,},	
+	columns/redA/.style={column name =\%red,},
 	precision=4
 	]{#1}
 }
@@ -48,14 +51,14 @@
 
 \newcommand{\makeresume}[4]{
 \pgfplotstablevertcat{#1}{#2}
-\pgfplotstablecreatecol[copy column from table={#3}{[index] 1}]{inL} {#1}
-\pgfplotstablecreatecol[copy column from table={#3}{[index] 2}]{outL} {#1}
-\pgfplotstablecreatecol[copy column from table={#3}{[index] 3}]{redL} {#1}
-\pgfplotstablecreatecol[copy column from table={#3}{[index] 4}]{tL} {#1}
-\pgfplotstablecreatecol[copy column from table={#4}{[index] 1}]{inA} {#1}
-\pgfplotstablecreatecol[copy column from table={#4}{[index] 2}]{outA} {#1}
-\pgfplotstablecreatecol[copy column from table={#4}{[index] 3}]{redA} {#1}
-\pgfplotstablecreatecol[copy column from table={#4}{[index] 4}]{tA} {#1}
+\pgfplotstablecreatecol[copy column from table={#3}{[index] in}]{inL} {#1}
+\pgfplotstablecreatecol[copy column from table={#3}{[index] out}]{outL} {#1}
+\pgfplotstablecreatecol[copy column from table={#3}{[index] red}]{redL} {#1}
+\pgfplotstablecreatecol[copy column from table={#3}{[index] T}]{tL} {#1}
+\pgfplotstablecreatecol[copy column from table={#4}{[index]	in}]{inA} {#1}
+\pgfplotstablecreatecol[copy column from table={#4}{[index] out}]{outA} {#1}
+\pgfplotstablecreatecol[copy column from table={#4}{[index] red}]{redA} {#1}
+\pgfplotstablecreatecol[copy column from table={#4}{[index] T}]{tA} {#1}
 }
 
 \begin{document}
@@ -65,26 +68,26 @@
 \pgfplotstableread[col sep=comma]{Resultados/lKNN.csv}\datalKNN
 \pgfplotstableread[col sep=comma]{Resultados/aKNN.csv}\dataaKNN
 
-\begin{comment}
 % Tablas Greedy SFS
-\pgfplotstableread{Resultados/wSFS.csv}\datawSFS
-\pgfplotstableread{Resultados/lSFS.csv}\datalSFS
-\pgfplotstableread{Resultados/aSFS.csv}\dataaSFS
+\pgfplotstableread[col sep=comma]{Resultados/wSFS.csv}\datawSFS
+\pgfplotstableread[col sep=comma]{Resultados/lSFS.csv}\datalSFS
+\pgfplotstableread[col sep=comma]{Resultados/aSFS.csv}\dataaSFS
 
+\begin{comment}
 % Tablas Local Search
-\pgfplotstableread{Resultados/wLS.csv}\datawLS
-\pgfplotstableread{Resultados/lLS.csv}\datalLS
-\pgfplotstableread{Resultados/aLS.csv}\dataaLS
+\pgfplotstableread[col sep=comma]{Resultados/wLS.csv}\datawLS
+\pgfplotstableread[col sep=comma]{Resultados/lLS.csv}\datalLS
+\pgfplotstableread[col sep=comma]{Resultados/aLS.csv}\dataaLS
 
 % Tablas Simulated Annealing
-\pgfplotstableread{Resultados/wSA.csv}\datawSA
-\pgfplotstableread{Resultados/lSA.csv}\datalSA
-\pgfplotstableread{Resultados/aSA.csv}\dataaSA
+\pgfplotstableread[col sep=comma]{Resultados/wSA.csv}\datawSA
+\pgfplotstableread[col sep=comma]{Resultados/lSA.csv}\datalSA
+\pgfplotstableread[col sep=comma]{Resultados/aSA.csv}\dataaSA
 
 % Tablas Tabu Search
-\pgfplotstableread{Resultados/wTS.csv}\datawTS
-\pgfplotstableread{Resultados/lTS.csv}\datalTS
-\pgfplotstableread{Resultados/aTS.csv}\dataaTS
+\pgfplotstableread[col sep=comma]{Resultados/wTS.csv}\datawTS
+\pgfplotstableread[col sep=comma]{Resultados/lTS.csv}\datalTS
+\pgfplotstableread[col sep=comma]{Resultados/aTS.csv}\dataaTS
 
 \end{comment}
 
@@ -94,6 +97,11 @@
 % Salida por pantalla
 \maketable{\dataKNN}
 
+% Tablas Resumen SFS
+\makeresume{\dataSFS}{\datawSFS}{\datalSFS}{\dataaSFS}
+
+% Salida por pantalla
+\maketable{\dataSFS}
 
 
 \end{document}

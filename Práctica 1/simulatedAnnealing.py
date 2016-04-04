@@ -19,7 +19,7 @@ def simAnnealing(train_data, train_categ):
     cost_best_sol = cost_current_sol
 
     # Establecemos la temperatura inicial y final
-    temp_0 = 0.3 * cost_best_sol / -np.log(0.3)
+    temp_0 = 0.3 * (100*cost_best_sol/len(train_data)) / -np.log(0.3)
     temp_final = 0.001 if temp_0 > 0.001 else temp_0*0.01
 
     # Inicializamos las variables que controlan el bucle
@@ -29,7 +29,7 @@ def simAnnealing(train_data, train_categ):
     num_successes = 1
     max_successes = 0.1 * max_neighbours
 
-    beta = (temp_0 - temp_final) / (max_checks/max_neighbours)*temp_0*temp_final
+    beta = (temp_0 - temp_final) / ((max_checks/max_neighbours)*temp_0*temp_final)
 
     while num_successes > 0 and num_checks < max_checks and temp > temp_final:
         num_successes = 0
@@ -41,7 +41,7 @@ def simAnnealing(train_data, train_categ):
             cost_last_sol =  getRateL1O(train_data[:,solution], train_categ)
             improvement = cost_last_sol - cost_current_sol
 
-            if improvement != 0 and (improvement > 0 or np.random.random() < np.exp(improvement/temp)):
+            if improvement != 0 and (improvement > 0 or np.random.random() < np.exp((100*improvement/len(train_data))/temp)):
                 cost_current_sol = cost_last_sol
                 num_successes += 1
                 if cost_last_sol > cost_best_sol:

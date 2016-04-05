@@ -5,7 +5,7 @@
 \usepackage{enumerate}
 \usepackage{listings}
 \usepackage{amsthm}
-\usepackage[pdftex]{hyperref} 
+\usepackage[hidelinks]{hyperref}
 \usepackage{booktabs}
 \usepackage{siunitx}
 \usepackage{pgfplotstable}
@@ -13,8 +13,15 @@
 \usepackage{geometry}
 \usepackage{changepage}
 
-\author{Jacinto Carrasco Castillo}
-\title{Metaheurísticas. Búsqueda por trayectorias para el problema de la selección de características}
+\author{Jacinto Carrasco Castillo 	\\
+		N.I.F. 32056356-Z			\\ 
+		\href{jacintocc@correo.ugr.es}{jacintocc@correo.ugr.es}}
+		
+\title{	Práctica 1 Metaheurísticas.\\
+		Búsqueda por trayectorias para el problema \\
+		de la selección de características\\
+		Curso 15-16\\
+		Algoritmos: SFS, LS, SA, TS, Extended TS}
 
 \newcommand{\maketable}[1]{
 \begin{adjustwidth}{-1cm}{}
@@ -31,18 +38,19 @@
 	column type/.add={}{|},
 	every last row/.style={before row =\hline\hline, after row=\hline},
 	every first column/.style={ column type/.add={|}{} },
-	columns/0/.style={column name = , string type},
-	columns/tA/.style={column name =T},
-	columns/tL/.style={column name =T},
-	columns/Clas. in/.style={column name =\%Clas. in},
-	columns/Clas. out/.style={column name =\%Clas. out},
-	columns/red./.style={column name =\%red.},
+	columns/partition/.style={column name = , string type},
+	columns/in/.style={column name =\%Clas. in},
 	columns/inL/.style={column name =\%Clas. in},	
-	columns/inA/.style={column name =\%Clas. in},	
+	columns/inA/.style={column name =\%Clas. in},
+	columns/out/.style={column name =\%Clas. out},
 	columns/outL/.style={column name =\%Clas. out},	
 	columns/outA/.style={column name =\%Clas. out},
-	columns/redL/.style={column name =\%red,},	
-	columns/redA/.style={column name =\%red,},
+	columns/T/.style={column name =T},
+	columns/tA/.style={column name =T},
+	columns/tL/.style={column name =T},
+	columns/red./.style={column name =\%red.},
+	columns/redL/.style={column name =\%red.},	
+	columns/redA/.style={column name =\%red.},
 	precision=4
 	]{#1}
 }
@@ -51,15 +59,16 @@
 
 \newcommand{\makeresume}[4]{
 \pgfplotstablevertcat{#1}{#2}
-\pgfplotstablecreatecol[copy column from table={#3}{[index] in}]{inL} {#1}
-\pgfplotstablecreatecol[copy column from table={#3}{[index] out}]{outL} {#1}
-\pgfplotstablecreatecol[copy column from table={#3}{[index] red}]{redL} {#1}
-\pgfplotstablecreatecol[copy column from table={#3}{[index] T}]{tL} {#1}
-\pgfplotstablecreatecol[copy column from table={#4}{[index]	in}]{inA} {#1}
-\pgfplotstablecreatecol[copy column from table={#4}{[index] out}]{outA} {#1}
-\pgfplotstablecreatecol[copy column from table={#4}{[index] red}]{redA} {#1}
-\pgfplotstablecreatecol[copy column from table={#4}{[index] T}]{tA} {#1}
+\pgfplotstablecreatecol[copy column from table={#3}{in}]{inL} {#1}
+\pgfplotstablecreatecol[copy column from table={#3}{out}]{outL} {#1}
+\pgfplotstablecreatecol[copy column from table={#3}{red}]{redL} {#1}
+\pgfplotstablecreatecol[copy column from table={#3}{T}]{tL} {#1}
+\pgfplotstablecreatecol[copy column from table={#4}{in}]{inA} {#1}
+\pgfplotstablecreatecol[copy column from table={#4}{out}]{outA} {#1}
+\pgfplotstablecreatecol[copy column from table={#4}{red}]{redA} {#1}
+\pgfplotstablecreatecol[copy column from table={#4}{T}]{tA} {#1}
 }
+
 
 \begin{document}
 
@@ -73,12 +82,12 @@
 \pgfplotstableread[col sep=comma]{Resultados/lSFS.csv}\datalSFS
 \pgfplotstableread[col sep=comma]{Resultados/aSFS.csv}\dataaSFS
 
-\begin{comment}
 % Tablas Local Search
 \pgfplotstableread[col sep=comma]{Resultados/wLS.csv}\datawLS
 \pgfplotstableread[col sep=comma]{Resultados/lLS.csv}\datalLS
 \pgfplotstableread[col sep=comma]{Resultados/aLS.csv}\dataaLS
 
+\begin{comment}
 % Tablas Simulated Annealing
 \pgfplotstableread[col sep=comma]{Resultados/wSA.csv}\datawSA
 \pgfplotstableread[col sep=comma]{Resultados/lSA.csv}\datalSA
@@ -89,7 +98,30 @@
 \pgfplotstableread[col sep=comma]{Resultados/lTS.csv}\datalTS
 \pgfplotstableread[col sep=comma]{Resultados/aTS.csv}\dataaTS
 
+% Tablas Extended Tabu Search
+\pgfplotstableread[col sep=comma]{Resultados/wETS.csv}\datawETS
+\pgfplotstableread[col sep=comma]{Resultados/lETS.csv}\datalETS
+\pgfplotstableread[col sep=comma]{Resultados/aETS.csv}\dataaETS
+
 \end{comment}
+
+\begin{titlepage}
+\maketitle
+\end{titlepage}
+\tableofcontents
+\newpage
+
+\section{Descripción del problema}
+
+\section{Descripción de la aplicación de los algoritmos}
+
+\section{Estructura del método de búsqueda}
+
+\section{Algoritmo de comparación}
+
+\section{Procedimiento para desarrollar la práctica}
+
+\section{Experimentos y análisis de resultados}
 
 % Tablas Resumen KNN
 \makeresume{\dataKNN}{\datawKNN}{\datalKNN}{\dataaKNN}
@@ -103,5 +135,12 @@
 % Salida por pantalla
 \maketable{\dataSFS}
 
+% Tablas Resumen LS
+\makeresume{\dataLS}{\datawLS}{\datalLS}{\dataaLS}
+
+% Salida por pantalla
+\maketable{\dataLS}
+
+\section{Bibliografía}
 
 \end{document}

@@ -90,7 +90,6 @@ def extendedTabuSearch(train_data, train_categ):
                 choosen = False
 
             if(choosen):
-                print("\nMejor vecino\t" + str(feature_selected) + "\nTasa de acierto \t" + str(rates[j,1]))
                 flip(solution, feature_selected)
                 tabu_list[tabu_index] = feature_selected
                 tabu_index = (tabu_index+1)%len(tabu_list)

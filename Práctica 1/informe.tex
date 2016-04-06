@@ -72,12 +72,6 @@
 
 \newcommand{\getElement}[3]{\pgfplotstablegetelem{#2}{#3}\of{#1} \pgfplotsretval}
 
-\newcommand{\makeGlobal}[6]{
-% Tabla Global
-
-}
-
-
 
 \begin{document}
 
@@ -85,7 +79,7 @@
 \pgfplotstableread[col sep=comma]{Resultados/wKNN.csv}\datawKNN
 \pgfplotstableread[col sep=comma]{Resultados/lKNN.csv}\datalKNN
 \pgfplotstableread[col sep=comma]{Resultados/aKNN.csv}\dataaKNN
-
+   
 % Tablas Greedy SFS
 \pgfplotstableread[col sep=comma]{Resultados/wSFS.csv}\datawSFS
 \pgfplotstableread[col sep=comma]{Resultados/lSFS.csv}\datalSFS
@@ -106,14 +100,10 @@
 \pgfplotstableread[col sep=comma]{Resultados/lTS.csv}\datalTS
 \pgfplotstableread[col sep=comma]{Resultados/aTS.csv}\dataaTS
 
-
-\begin{comment}
 % Tablas Extended Tabu Search
 \pgfplotstableread[col sep=comma]{Resultados/wETS.csv}\datawETS
 \pgfplotstableread[col sep=comma]{Resultados/lETS.csv}\datalETS
 \pgfplotstableread[col sep=comma]{Resultados/aETS.csv}\dataaETS
-
-\end{comment}
 
 \begin{titlepage}
 \maketitle
@@ -134,15 +124,54 @@ Las funciones de evaluación pueden estar basadas en la consistencia, en la Teor
 
 
 \section{Descripción de la aplicación de los algoritmos}
-
 \subsection{Representación de soluciones}
+	Para este problema tenemos varias formas posibles de representar las soluciones:
+	\begin{itemize}
+		\item Representación binaria: Cada solución está representada por un vector binario de longitud igual al número de características, donde las posiciones seleccionadas tendrán un 1 o $\texttt{True}$ y las no seleccionadas un 0 o $\texttt{False}$. Esta opción, que será la que tomaremos, sólo es recomendable si no tenemos restricciones sobre el número de características seleccionadas.
+		\item Representación entera: Cada solución es un vector de tamaño fijo $m \leq n$ con las características seleccionadas. Esta representación sí es adecuada si tenemos restricciones sobre el número de características tomadas ya que no podemos hacerlo con más de $m$.
+		\item Representación de orden: Cada solución es una permutación de $n$ elementos, ordenados según la importancia de cada característica. Aquí también se maneja el cumplimiento de restricciones pues una vez encontrada la solución, tomaremos sólo las primeras $m$ características.
+	\end{itemize}
+	Se ha de mencionar que en las dos últimas representaciones el espacio de soluciones es mayor que el espacio de búsqueda, justificado en la representación de orden porque da más información (podríamos tomar soluciones de longitud variable), pero que en la representación entera sólo es razonable asumir si tenemos una restricción de longitud fija. Además, otra ventaja de la representación binaria es la facilidad para aplicarle operadores (de vecindario, en posteriores prácticas de cruce...) manteniendo la consistencia.
+
 \subsection{Función objetivo}
+	La función objetivo será el porcentaje de acierto en el conjunto de test para el clasificador $3-NN$ obtenido usando las distancias de los individuos $\omega$ en las dimensiones representadas por las características seleccionadas en el vector solución para el conjunto de entrenamiento. El objetivo será maximizar esta función. A la hora de buscar esta solución sólo estaremos manejando los datos de entrenamiento, luego aquí la función objetivo será la media de tasa de acierto para cada uno de los datos de entrenamiento con respecto a todos los demás, por lo que tenemos que usar la técnica de $\textit{Leave-One-Out}$. Esta técnica consiste en quitar del conjunto de datos cada uno de los elementos, comprobar el acierto o no para este dato en concreto, y devolverlo al conjunto de datos. Así evitamos que los resultados estén sesgados.
+	
+\begin{lstlisting}[mathescape=true]
+targetFunction(data_train, categories_train, data_test,
+				categories_test, solution):
+BEGIN
+	num_items $\leftarrow$ length(data_test)
+	sum_score $\leftarrow$ 0
+	
+	data_train' $\leftarrow$ {$col_i$ from data_train if $solution_i$ is True}
+	classifier $\leftarrow$ Make3NNClasifier(data_train', categories_train)
+
+	data_test' $\leftarrow$ {$col_i$ from data_test if $solution_i$ is True}
+	
+	FOR item IN data_test'
+		predicted_class $\leftarrow$ classifier(item)
+		IF predicted_class == categories_test_item THEN
+			sum_score $\leftarrow$ sum_score + 1
+	END
+	
+	RETURN sum_score / num_items * 100 
+END
+\end{lstlisting}
+
+	La función de evaluación incluida en el código no la he realizado yo sino que he utilizado el paquete $\texttt{sklearn}$ de $\texttt{Python}$ por razones de eficiencia.
+	
 \subsection{Operadores comunes}
-\subsection{Algoritmos empleados}
-\subsubsection{Búsqueda local}
-\subsubsection{Enfriamiento simulado}
-\subsubsection{Búsqueda tabú}
-\subsubsection{Búsqueda tabú extendida}
+	Entenderemos como vecindario de una solución a los vectores que sólo difieren en una posición. Por tanto, el operador para movernos a una solución vecina consistirá en cambiar una posición determinada:
+\begin{lstlisting}[mathescape=true]
+flip(solution, positon):
+BEGIN
+	neighbour $\leftarrow$ copy(solution)
+	actual_value $\leftarrow$ $\texttt{solution}_{\texttt{position}}$
+	$\texttt{neighbour}_{\texttt{position}}$ $\leftarrow$ NOT actual_value
+	RETURN neighbour
+END
+\end{lstlisting}
+	
 
 \section{Estructura del método de búsqueda}
 \subsection{Búsqueda local}
@@ -186,19 +215,55 @@ Las funciones de evaluación pueden estar basadas en la consistencia, en la Teor
 % Salida por pantalla
 \maketable{\dataTS}
 
+% Tablas Resumen ETS
+\makeresume{\dataETS}{\datawETS}{\datalETS}{\dataaETS}
+
+% Salida por pantalla
+\maketable{\dataETS}
+
 % Tabla Global
-\pgfplotstableread[col sep=comma, string type]{
+\pgfplotstableread[col sep=comma]{
 algorithm,inW,outW,redW,TW,inL,outL,redL,TL,inA,outA,redA,TA
 3-NN,	\getElement{\dataKNN}{10}{in},\getElement{\dataKNN}{10}{out},\getElement{\dataKNN}{10}{red},\getElement{\dataKNN}{10}{T},\getElement{\dataKNN}{10}{inL},\getElement{\dataKNN}{10}{outL},\getElement{\dataKNN}{10}{redL},\getElement{\dataKNN}{10}{tL},\getElement{\dataKNN}{10}{inA},\getElement{\dataKNN}{10}{outA},\getElement{\dataKNN}{10}{redA},\getElement{\dataKNN}{10}{tA}
 SFS,	\getElement{\dataSFS}{10}{in},\getElement{\dataSFS}{10}{out},\getElement{\dataSFS}{10}{red},\getElement{\dataSFS}{10}{T},\getElement{\dataSFS}{10}{inL},\getElement{\dataSFS}{10}{outL},\getElement{\dataSFS}{10}{redL},\getElement{\dataSFS}{10}{tL},\getElement{\dataSFS}{10}{inA},\getElement{\dataSFS}{10}{outA},\getElement{\dataSFS}{10}{redA},\getElement{\dataSFS}{10}{tA}
 BL,		\getElement{\dataLS}{10}{in},\getElement{\dataLS}{10}{out},\getElement{\dataLS}{10}{red},\getElement{\dataLS}{10}{T},\getElement{\dataLS}{10}{inL},\getElement{\dataLS}{10}{outL},\getElement{\dataLS}{10}{redL},\getElement{\dataLS}{10}{tL},\getElement{\dataLS}{10}{inA},\getElement{\dataLS}{10}{outA},\getElement{\dataLS}{10}{redA},\getElement{\dataLS}{10}{tA}
 ES,		\getElement{\dataSA}{10}{in},\getElement{\dataSA}{10}{out},\getElement{\dataSA}{10}{red},\getElement{\dataSA}{10}{T},\getElement{\dataSA}{10}{inL},\getElement{\dataSA}{10}{outL},\getElement{\dataSA}{10}{redL},\getElement{\dataSA}{10}{tL},\getElement{\dataSA}{10}{inA},\getElement{\dataSA}{10}{outA},\getElement{\dataSA}{10}{redA},\getElement{\dataSA}{10}{tA}
 BT básica,	\getElement{\dataTS}{10}{in},\getElement{\dataTS}{10}{out},\getElement{\dataTS}{10}{red},\getElement{\dataTS}{10}{T},\getElement{\dataTS}{10}{inL},\getElement{\dataTS}{10}{outL},\getElement{\dataTS}{10}{redL},\getElement{\dataTS}{10}{tL},\getElement{\dataTS}{10}{inA},\getElement{\dataTS}{10}{outA},\getElement{\dataTS}{10}{redA},\getElement{\dataTS}{10}{tA}
+BT extendida,	\getElement{\dataETS}{10}{in},\getElement{\dataETS}{10}{out},\getElement{\dataETS}{10}{red},\getElement{\dataETS}{10}{T},\getElement{\dataETS}{10}{inL},\getElement{\dataETS}{10}{outL},\getElement{\dataETS}{10}{redL},\getElement{\dataETS}{10}{tL},\getElement{\dataETS}{10}{inA},\getElement{\dataETS}{10}{outA},\getElement{\dataETS}{10}{redA},\getElement{\dataETS}{10}{tA}
 }\dataGlobal
 
-
-\
-\pgfplotstabletypeset[ string type]{\dataGlobal}
+\begin{adjustwidth}{-1cm}{}
+\resizebox{\linewidth}{!}{
+\pgfplotstabletypeset[
+	every head row/.style={
+		before row={%
+				\hline
+				& \multicolumn{4}{c|}{WDBC} & \multicolumn{4}{c|}{Movement Libras} & \multicolumn{4}{c|}{Arrythmia}\\
+				\cline{2-13}
+		},
+		after row=\cline{2-13}\hline,
+		column type=c
+	},
+	every first column/.style={ column type/.add={|}{} },
+	every last row/.style={after row=\hline},
+	column type/.add={}{|},
+	columns/algorithm/.style={column name = , string type},
+	columns/inW/.style={sci,  precision=4,column name =\%Clas. in},
+	columns/inL/.style={column name =\%Clas. in},	
+	columns/inA/.style={column name =\%Clas. in},
+	columns/outW/.style={column name =\%Clas. out},
+	columns/outL/.style={column name =\%Clas. out},	
+	columns/outA/.style={column name =\%Clas. out},
+	columns/TW/.style={column name =T},
+	columns/TA/.style={column name =T},
+	columns/TL/.style={column name =T},
+	columns/redW/.style={column name =\%red.},
+	columns/redL/.style={column name =\%red.},	
+	columns/redA/.style={column name =\%red.},
+	string type
+	]{\dataGlobal}
+}
+\end{adjustwidth}
 
 \section{Bibliografía}
 \begin{itemize}

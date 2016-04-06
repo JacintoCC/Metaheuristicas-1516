@@ -93,7 +93,7 @@ def runAlgorithm(data, categories, function, iterations = 5, num_partitions = 2)
     return results_table
 
 def  resultsToCSV(name_alg, name_db, results):
-    f = open('Resultados/'+name_db+name_alg+'.csv','w')
+    f = open('Resultados/'+name_db+name_alg+'.csv','a')
     f.write("partition,in,out,red,T\n")
 
     for i in range(len(results)):
@@ -106,7 +106,10 @@ def  resultsToCSV(name_alg, name_db, results):
     f.write('Media, ' + str(mean_results[0]) + ', ' + str(mean_results[1]) + ', ' + str(mean_results[2]) + ', ' + str(mean_results[3]) + '\n')
     f.close()
 
+
+results = runAlgorithm(data, categories, alg_options[args.a])
+
 if(args.write):
-    resultsToCSV(alg_names[args.a], args.DB.lower() ,runAlgorithm(data, categories, alg_options[args.a]))
+    resultsToCSV(alg_names[args.a], args.DB.lower(),results)
 else:
-    print(runAlgorithm(data, categories, alg_options[args.a]))
+    print(results)

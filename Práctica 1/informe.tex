@@ -31,13 +31,14 @@
 		before row={%
 				\hline
 				& \multicolumn{4}{c|}{WDBC} & \multicolumn{4}{c|}{Movement Libras} & \multicolumn{4}{c|}{Arrythmia}\\
-				\hline
+				\cline{2-13}
 		},
-		after row=\hline\hline
+		after row=\cline{2-13}\hline,
+		column type=c
 	},
-	column type/.add={}{|},
-	every last row/.style={before row =\hline\hline, after row=\hline},
 	every first column/.style={ column type/.add={|}{} },
+	every last row/.style={before row =\hline\hline, after row=\hline},
+	column type/.add={}{|},
 	columns/partition/.style={column name = , string type},
 	columns/in/.style={column name =\%Clas. in},
 	columns/inL/.style={column name =\%Clas. in},	
@@ -69,6 +70,14 @@
 \pgfplotstablecreatecol[copy column from table={#4}{T}]{tA} {#1}
 }
 
+\newcommand{\getElement}[3]{\pgfplotstablegetelem{#2}{#3}\of{#1} \pgfplotsretval}
+
+\newcommand{\makeGlobal}[6]{
+% Tabla Global
+
+}
+
+
 
 \begin{document}
 
@@ -87,7 +96,6 @@
 \pgfplotstableread[col sep=comma]{Resultados/lLS.csv}\datalLS
 \pgfplotstableread[col sep=comma]{Resultados/aLS.csv}\dataaLS
 
-\begin{comment}
 % Tablas Simulated Annealing
 \pgfplotstableread[col sep=comma]{Resultados/wSA.csv}\datawSA
 \pgfplotstableread[col sep=comma]{Resultados/lSA.csv}\datalSA
@@ -98,6 +106,8 @@
 \pgfplotstableread[col sep=comma]{Resultados/lTS.csv}\datalTS
 \pgfplotstableread[col sep=comma]{Resultados/aTS.csv}\dataaTS
 
+
+\begin{comment}
 % Tablas Extended Tabu Search
 \pgfplotstableread[col sep=comma]{Resultados/wETS.csv}\datawETS
 \pgfplotstableread[col sep=comma]{Resultados/lETS.csv}\datalETS
@@ -108,14 +118,37 @@
 \begin{titlepage}
 \maketitle
 \end{titlepage}
+
 \tableofcontents
 \newpage
 
 \section{Descripción del problema}
 
+El problema que nos ocupa es un problema de clasificación. Partimos de una muestra de los objetos que queremos clasificar y su clasificación, es decir, la clase a la que pertenece y pretendemos, en base a esta muestra, poder clasificar nuevas instancias que nos lleguen.\\
+La clasificación se realizará en base a una serie de características, que nos permitan determinar si un individuo pertenece a un grupo u otro. Por tanto, tendremos individuos de una población $\Omega$ representados como un vector de características: $ \omega \in \Omega; \omega = (x_1(\omega), \dots x_n(\omega))$, donde $\omega$ es un individuo de la población y $x_i, i=1,\dots n$ son las $n$ características sobre las que se tiene información. Buscamos $f:\Omega \longrightarrow C=\{C_1, \dots, C_M\}$, donde $C=\{C_1, \dots, C_M\}$ es el conjunto de clases a las que podemos asignar los objetos.\\
+El problema de clasificación está relacionado con la separabilidad de las clases en el sentido de que existirá la función $f$  anteriormente mencionada siempre que las clases sean separables, es decir, siempre que un individuo con unas mismas características pertenzcan a una misma clase. Sin embargo, si se da que dos individuos $\omega_1, \omega_2 \in \Omega$, $(x_1(\omega_1), \dots x_n(\omega_1))=(x_1(\omega_2), \dots x_n(\omega_2))$ y sin embargo $f(\omega_1) \neq f(\omega_2)$, no podrá existir $f$. En todo caso, querríamos obtener la mayor tasa de acierto posible.\\  
+Por tanto, queremos, en base a unos datos, hallar la mejor $f$ posible. De esto trata el aprendizaje clasificado: Se conocen instancias de los datos y las clases a las que pertenecen. Usaremos como técnica de aprendizaje supervisado la técnica estadística conocida como $k$ vecinos más cercanos. Se trata de buscar los $k$ vecinos más cercanos y asignar al objeto la clase que predomine de entre los vecinos. En caso de empate, se seleccionará la clase con más votos más cercana.\\  
+Pero no nos quedamos en el problema de clasificación, sino que buscamos reducir el número de características. Con esto pretendemos seleccionar las características que nos den un mejor resultado (por ser las más influyentes a la hora de decidir la categoría). Usaremos los datos de entrenamiento haciendo pruebas mediante diferentes metaheurísticas hasta obtener la mejor selección que seamos capaces de encontrar.\\  
+El interés en realizar la selección de características reside en que se aumentará la eficiencia, al requerir menos tiempo para construir el clasificador, y que se mejoran los resultados al descartar las características menos influyentes y que sólo aportan ruido. Esto hace también que se reduzcan los costes de mantenimiento y se aumente la interpretabilidad de los datos.\\
+Las funciones de evaluación pueden estar basadas en la consistencia, en la Teoría de la Información, en la distancia o en el rendimiento de clasificadores. Nosotros usaremos el rendimiento promedio de un clasificador $3-NN$.
+
+
 \section{Descripción de la aplicación de los algoritmos}
 
+\subsection{Representación de soluciones}
+\subsection{Función objetivo}
+\subsection{Operadores comunes}
+\subsection{Algoritmos empleados}
+\subsubsection{Búsqueda local}
+\subsubsection{Enfriamiento simulado}
+\subsubsection{Búsqueda tabú}
+\subsubsection{Búsqueda tabú extendida}
+
 \section{Estructura del método de búsqueda}
+\subsection{Búsqueda local}
+\subsection{Enfriamiento simulado}
+\subsection{Búsqueda tabú}
+\subsection{Búsqueda tabú extendida}
 
 \section{Algoritmo de comparación}
 
@@ -141,6 +174,34 @@
 % Salida por pantalla
 \maketable{\dataLS}
 
-\section{Bibliografía}
+% Tablas Resumen SA
+\makeresume{\dataSA}{\datawSA}{\datalSA}{\dataaSA}
 
+% Salida por pantalla
+\maketable{\dataSA}
+
+% Tablas Resumen TS
+\makeresume{\dataTS}{\datawTS}{\datalTS}{\dataaTS}
+
+% Salida por pantalla
+\maketable{\dataTS}
+
+% Tabla Global
+\pgfplotstableread[col sep=comma, string type]{
+algorithm,inW,outW,redW,TW,inL,outL,redL,TL,inA,outA,redA,TA
+3-NN,	\getElement{\dataKNN}{10}{in},\getElement{\dataKNN}{10}{out},\getElement{\dataKNN}{10}{red},\getElement{\dataKNN}{10}{T},\getElement{\dataKNN}{10}{inL},\getElement{\dataKNN}{10}{outL},\getElement{\dataKNN}{10}{redL},\getElement{\dataKNN}{10}{tL},\getElement{\dataKNN}{10}{inA},\getElement{\dataKNN}{10}{outA},\getElement{\dataKNN}{10}{redA},\getElement{\dataKNN}{10}{tA}
+SFS,	\getElement{\dataSFS}{10}{in},\getElement{\dataSFS}{10}{out},\getElement{\dataSFS}{10}{red},\getElement{\dataSFS}{10}{T},\getElement{\dataSFS}{10}{inL},\getElement{\dataSFS}{10}{outL},\getElement{\dataSFS}{10}{redL},\getElement{\dataSFS}{10}{tL},\getElement{\dataSFS}{10}{inA},\getElement{\dataSFS}{10}{outA},\getElement{\dataSFS}{10}{redA},\getElement{\dataSFS}{10}{tA}
+BL,		\getElement{\dataLS}{10}{in},\getElement{\dataLS}{10}{out},\getElement{\dataLS}{10}{red},\getElement{\dataLS}{10}{T},\getElement{\dataLS}{10}{inL},\getElement{\dataLS}{10}{outL},\getElement{\dataLS}{10}{redL},\getElement{\dataLS}{10}{tL},\getElement{\dataLS}{10}{inA},\getElement{\dataLS}{10}{outA},\getElement{\dataLS}{10}{redA},\getElement{\dataLS}{10}{tA}
+ES,		\getElement{\dataSA}{10}{in},\getElement{\dataSA}{10}{out},\getElement{\dataSA}{10}{red},\getElement{\dataSA}{10}{T},\getElement{\dataSA}{10}{inL},\getElement{\dataSA}{10}{outL},\getElement{\dataSA}{10}{redL},\getElement{\dataSA}{10}{tL},\getElement{\dataSA}{10}{inA},\getElement{\dataSA}{10}{outA},\getElement{\dataSA}{10}{redA},\getElement{\dataSA}{10}{tA}
+BT básica,	\getElement{\dataTS}{10}{in},\getElement{\dataTS}{10}{out},\getElement{\dataTS}{10}{red},\getElement{\dataTS}{10}{T},\getElement{\dataTS}{10}{inL},\getElement{\dataTS}{10}{outL},\getElement{\dataTS}{10}{redL},\getElement{\dataTS}{10}{tL},\getElement{\dataTS}{10}{inA},\getElement{\dataTS}{10}{outA},\getElement{\dataTS}{10}{redA},\getElement{\dataTS}{10}{tA}
+}\dataGlobal
+
+
+\
+\pgfplotstabletypeset[ string type]{\dataGlobal}
+
+\section{Bibliografía}
+\begin{itemize}
+\item \href{https://www.complang.tuwien.ac.at/doc/texlive-pictures-doc/latex/pgfplots/pgfplotstable.pdf}{Manual PGFPLOTSTABLE}
+\end{itemize}
 \end{document}

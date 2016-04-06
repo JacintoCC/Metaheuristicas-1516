@@ -47,7 +47,7 @@ def extendedTabuSearch(train_data, train_categ):
     cost_best_sol = cost_current_sol
 
     # Determinamos el número de iteraciones
-    max_iter = 15000//max_neighbours
+    max_iter = 5000//max_neighbours
 
     # Lista tabú
     tabu_list = [-1 for i in range(num_features//3)]
@@ -76,6 +76,7 @@ def extendedTabuSearch(train_data, train_categ):
 
             if rates[j,1] > cost_best_sol:
                 cost_best_sol =  rates[j,1]
+                flip(solution, feature_selected)
                 best_solution = np.copy(solution)
                 last_improvement = i
                 choosen = True
@@ -83,14 +84,14 @@ def extendedTabuSearch(train_data, train_categ):
                 tabu_index = 0
                 tabu_list = changeTabuList(tabu_list)
                 solution, cost_current_sol = restartSolution(train_data, train_categ, best_solution, cost_best_sol, long_term)
-                choosen = True
+                break
             elif feature_selected not in tabu_list:
+                flip(solution, feature_selected)
                 choosen = True
             else:
                 choosen = False
 
             if(choosen):
-                flip(solution, feature_selected)
                 tabu_list[tabu_index] = feature_selected
                 tabu_index = (tabu_index+1)%len(tabu_list)
                 long_term[feature_selected] +=1

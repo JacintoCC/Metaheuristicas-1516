@@ -13,6 +13,7 @@
 \usepackage{geometry}
 \usepackage{changepage}
 
+
 \author{Jacinto Carrasco Castillo 	\\
 		N.I.F. 32056356-Z			\\ 
 		\href{jacintocc@correo.ugr.es}{jacintocc@correo.ugr.es}}
@@ -140,25 +141,25 @@ Las funciones de evaluación pueden estar basadas en la consistencia, en la Teor
 targetFunction(data_train, categories_train, data_test,
 				categories_test, solution):
 BEGIN
-	num_items $\leftarrow$ length(data_test)
-	sum_score $\leftarrow$ 0
+   num_items $\leftarrow$ length(data_test)
+   sum_score $\leftarrow$ 0
 	
-	data_train' $\leftarrow$ {$col_i$ from data_train if $solution_i$ is True}
-	classifier $\leftarrow$ Make3NNClasifier(data_train', categories_train)
+   data_train' $\leftarrow$ {$col_i$ from data_train if $solution_i$ is True}
+   classifier $\leftarrow$ Make3NNClasifier(data_train', categories_train)
 
-	data_test' $\leftarrow$ {$col_i$ from data_test if $solution_i$ is True}
+   data_test' $\leftarrow$ {$col_i$ from data_test if $solution_i$ is True}
 	
-	FOR item IN data_test'
-		predicted_class $\leftarrow$ classifier(item)
-		IF predicted_class == categories_test_item THEN
-			sum_score $\leftarrow$ sum_score + 1
-	END
+   FOR item IN data_test'
+      predicted_class $\leftarrow$ classifier(item)
+      IF predicted_class == categories_test_item THEN
+         sum_score $\leftarrow$ sum_score + 1
+   END
 	
-	RETURN sum_score / num_items * 100 
+   RETURN sum_score / num_items * 100 
 END
 \end{lstlisting}
 
-	La función de evaluación incluida en el código no la he realizado yo sino que he utilizado el paquete $\texttt{sklearn}$ de $\texttt{Python}$ por razones de eficiencia.
+	La función de evaluación incluida en el código no la he realizado yo sino que he utilizado el paquete $\texttt{sklearn}$ de $\texttt{Python}$ por razones de eficiencia. A lo largo de la práctica (en los métodos de búsqueda) haré referencia a una función $getValue(data, categories, solution)$ que representa la función de evaluación con la técnica del $\textit{Leave-One-Out}$ explicada anteriormente.
 	
 \subsection{Operadores comunes}
 	Entenderemos como vecindario de una solución a los vectores que sólo difieren en una posición. Por tanto, el operador para movernos a una solución vecina consistirá en cambiar una posición determinada:
@@ -175,9 +176,195 @@ END
 
 \section{Estructura del método de búsqueda}
 \subsection{Búsqueda local}
+	En el algoritmo de búsqueda local partimos de una solución aleatoria y exploramos el vecindario buscando mejorar la solución actual.
+	El procedimiento será buscar vecino por vecino y quedarnos con el primero de ellos que mejore la 
+	solución actual. Esto se conoce como búsqueda local del primer vecino. Nos pararemos cuando no haya ningún vecino que mejore la 
+	función objetivo, o bien cuando realicemos 15000 comprobaciones. Es claro que no podemos afirmar que hayamos encontrado la
+	solución global, pero sí al menos que hemos llegado a un óptimo local.
+	
+	\begin{lstlisting}[mathescape=true]
+localSearch(data, categories) BEGIN
+   solution $\leftarrow$ generateRandomSolution()
+   previous_value $\leftarrow$ getValue(data, categories, solution)
+	
+   REPEAT
+      first_neig $\leftarrow$  random{1,..., num_features}
+      neighbours $\leftarrow$ {flip(solution,i): i=first_neig,...,first_neig-1}
+      found_better $\leftarrow$ FALSE
+		
+      FOR neig IN neighbours
+         current_value $\leftarrow$ getValue(data, categories, neig)
+			
+         if( current_value > previous_value) THEN
+            found_better $\leftarrow$ TRUE
+            solution $\leftarrow$ neig
+            BREAK
+		
+         END
+   WHILE( found_better )
+	
+   return solution
+END
+	\end{lstlisting}
+	
+	Debido a la función objetivo tomada y a la complejidad para sacar la variación del coste de una solución a partir de otra (tendríamos que modificar la matriz de distancias entre los elementos, volver a entrenar al clasificador y evaluarlo), no consideramos ninguna factorización. Esto ocurrirá también para los demás algoritmos.
+
 \subsection{Enfriamiento simulado}
+
+El método de enfriamiento simulado partirá de una solución también aleatoria y explorará un cierto número de vecinos, moviéndose a ellos si bien mejoran la solución actual, o bien es una solución peor en base a una probabilidad que variará según un valor que se modificará a lo largo de la ejecución del algoritmo, conocido como temperatura.\\
+La idea es que queremos explorar un mayor subespacio del espacio de búsqueda, por eso la probabilidad de aceptar una solución peor será mayor al comienzo de la ejecución, o bien si las soluciones son muy semejantes y no avanzamos.\\
+El algoritmo de ES incluye las siguientes componentes:
+\begin{itemize}
+\item Esquema de enfriamiento: Usaremos el esquema de Cauchy modificado, que nos permite fijar de antemano el número de enfriamientos a realizar. Cada enfriamiento consisitirá en actualizar la temperatura, y con ella, la probabilidad de aceptar una solución peor. Para $T_k$ la temperatura en la iteración $k$, $T_0$ la temperatura inicial, $T_f$ la final y $M=\frac{1500}{max\_vecinos}$ el número de iteraciones a realizar:
+	\[ T_{k+1} = \frac{T_k}{1+\beta \cdot T_k};\quad \beta=\frac{T_0-T_f}{M \cdot T_0 \cdot T_f} \]
+\item La exploración del entorno en cada iteración consistirá en seleccionar aleatoriamente un máximo de $10 \cdot num\_caracteristicas$ vecinos.
+\item Condición de enfriamiento: Pasaremos a la siguiente iteración, enfriando por tanto la temperatura, cuando hemos recorrido todos los vecinos generados o bien cuando hemos aceptado (ya sea porque mejora a la solución de ese momento o bien debido a la probabilidad en función de la temperatura) un número de vecinos igual al número  de características.
+\item La condición de parada será haber realizado un número máximo de iteraciones (equivalente a que la temperatura sea mayor que la temperatura final) o bien que de entre los vecinos generados no haya acpetado ninguno.
+\item La temperatura inicial se calcula en función del valor de la solución inicial y dos parámetros $\mu,\phi:\ T_0 = \frac{\mu \cdot C(S_0)}{-\log(\phi)}$. Tomaremos $\mu=\phi=0.3$
+\end{itemize}
+	\begin{lstlisting}[mathescape=true]
+simulatedAnnealing(data, categories) BEGIN
+   solution $\leftarrow$ generateRandomSolution()
+   current_value $\leftarrow$ getValue(data, categories, solution)
+   
+   best_solution $\leftarrow$ copy(solution)
+   best_value $\leftarrow$ current_value
+   
+   T $\leftarrow$ initializeTemperature(current_value)
+	
+   REPEAT
+      neighbours $\leftarrow$ {random{1,..., num_features}, 
+                              size=num_max_neighbours}
+                              
+	  num_succeses $\leftarrow$ 0
+	  
+      FOR j in neighbours IF ( num_succeses < max_sucesses &
+                               num_checks < max_checks)
+         last_sol $\leftarrow$ flip(solution, j)
+         last_value $\leftarrow$ getValue(data, categories, neig)
+         
+         num_checks $\leftarrow$ num_checks + 1
+         change $\leftarrow$ last_value - current_value
+         
+         if( change > 0 OR acept_by_temp(change,T)) THEN
+            current_value $\leftarrow$ last_value
+            solution $\leftarrow$ last_sol
+            num_succeses $\leftarrow$ num_succeses + 1
+            
+            if( last_value > best_value ) THEN
+               best_solution $\leftarrow$ solution
+               best_value $\leftarrow$ current_value
+          
+         T $\leftarrow$ updateTemperature()
+      END
+   WHILE( Condicion de parada )
+   RETURN solution
+END
+	\end{lstlisting}
+	
+	
 \subsection{Búsqueda tabú}
+
+	Para la versión básica de la lista tabú, los elementos propios de este método que se incluyen son la lista tabú, la exploración del entorno y el criterio de aspiración. El funcionamiento consiste en moverse al mejor vecino posible siempre que ese movimiento no se haya realizado en un pasado próximo (usamos para saberlo la lista tabú) o bien si el movimiento cumple el criterio de aspiración.
+	\begin{itemize}
+	\item Lista tabú: El tamaño será un tercio del número de características. Almacenará los últimos movimientos realizados e impedirá que se realicen estos movimientos. La usaremos como si fuera una estructura circular, facilitando saber qué elemento lleva más tiempo colocado y debe salir de la lista.
+	\item Exploración del entorno: En cada iteración se generan 30 soluciones vecinas aleatorias diferentes. Puesto que iremos por orden buscando un vecino que cumpla el criterio de aspiración o ser la mejor solución que no esté en la lista tabú, lo que hago es ordenar a los vecinos por su porcentaje de acierto, facilitando la exploración.
+	\item Criterio de aspiración: El criterio de aspiración es tener una mejor tasa de acierto que la mejor solución encontrada hasta el momento. 
+	\end{itemize}
+
+	\begin{lstlisting}[mathescape=true]
+tabuSearch(data, categories) BEGIN
+   solution $\leftarrow$ generateRandomSolution()
+   current_value $\leftarrow$ getValue(data, categories, solution)
+   
+   best_solution $\leftarrow$ copy(solution)
+   best_value $\leftarrow$ current_value
+   
+   tabu_list $\leftarrow$ initializeTabuList()
+	
+   FOR j in {1,...,max_iterations}
+      characteristics $\leftarrow$ {random{1,..., num_features}, size=30
+                               without repetition}
+      neighbours $\leftarrow$ {flip(solution,i): i in characteristics}
+      
+      sort (neighbours, characteristics) 
+            by getValue(data, categories, neighbours) order descending
+      
+	  
+      FOR neigh,char IN (neighbours, characteristics)
+         current_value $\leftarrow$ getValue(data, categories, neigh)
+         IF last_value > best_value THEN
+            best_value $\leftarrow$ current_value
+            solution $\leftarrow$ neigh
+            add char to tabu_list
+            BREAK
+         ELSE IF char NOT IN tabu_list
+            solution $\leftarrow$ neigh
+            add char to tabu_list
+            BREAK
+      END
+      
+   RETURN solution
+END
+	\end{lstlisting}
+	
+	Sobre el algoritmo expuesto en clase, he realizado la modificación de ordenar el vector de soluciones y características por lo antes mencionado.
+	
 \subsection{Búsqueda tabú extendida}
+
+La búsqueda tabú extendida que implementaremos parte de la versión básica, a la que se le añaden una memoria a largo plazo y un procedimiento para reinicializar la solución si no se ha obtenido una mejora en los últimos pasos.\\
+La memoria a largo plazo se encargará de saber las características que han sido más veces modificadas. Esto nos permitirá, cuando queramos reiniciar la solución, diversificar el espacio de búsqueda, dando más probabilidad de ser escogidas las características menos utilizadas. La memoria a largo plazo no la reiniciaremos cada vez que lo hagamos con la solución.\\
+Cuando llevemos diez pasos sin haber encontrado una solución mejor que la encontrada hasta entonces, reiniciaremos la solución. Lo haremos de tres maneras:
+\begin{itemize}
+\item Solución aleatoria: Creamos, como al inicio de la búsqueda, un vector solución aleatorio.
+\item Volvemos a la mejor solución encontrada hasta el momento con la intención de explorar más a fondo su entorno por si nos llevara a una mejor solución.
+\item Partir de una solución aleatoria generada mediante la memoria a largo plazo.
+\end{itemize} 
+
+Además de esto, con la intención de cambiar la estrategia seguida hasta el momento, se cambia la longitud de la lista tabú de forma aleatoria en un $50\%$. Si el tamaño de la lista tabú aumenta, estaremos almacenando más posiciones con lo que seremos más restrictivos a la hora de cambiar una característica recientemente modificada, en cambio si la hacemos más pequeña, sí que permitiremos estos cambios.
+
+	\begin{lstlisting}[mathescape=true]
+tabuSearch(data, categories) BEGIN
+   solution $\leftarrow$ generateRandomSolution()
+   current_value $\leftarrow$ getValue(data, categories, solution)
+   
+   best_solution $\leftarrow$ copy(solution)
+   best_value $\leftarrow$ current_value
+   last_improvement $\leftarrow$ 0
+   
+   tabu_list $\leftarrow$ initializeTabuList()
+   long_term_memory $\leftarrow$ {0,...,0: size = num_features}
+	
+   FOR j in {1,...,max_iterations}
+      characteristics $\leftarrow$ {random{1,..., num_features}, size=30
+                               without repetition}
+      neighbours $\leftarrow$ {flip(solution,i): i in characteristics}
+      
+      sort (neighbours, characteristics) 
+            by getValue(data, categories, neighbours) order descending
+      
+	  
+      FOR neigh,char IN (neighbours, characteristics)
+         current_value $\leftarrow$ getValue(data, categories, neigh)
+         IF last_value > best_value THEN
+            best_value $\leftarrow$ current_value
+            solution $\leftarrow$ neigh
+            add char to tabu_list
+            last_improvement $\leftarrow$ j
+            BREAK
+         ELSE IF j-last_improvement > 10 THEN
+            tabu_list $\leftarrow$ changeTabuList()
+            solution $\leftarrow$ restartSolution()
+         ELSE IF char NOT IN tabu_list THEN
+            solution $\leftarrow$ neigh
+            add char to tabu_list
+            BREAK
+      END
+      
+   RETURN solution
+END
+	\end{lstlisting}
+
 
 \section{Algoritmo de comparación}
 

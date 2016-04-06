@@ -93,17 +93,17 @@ def runAlgorithm(data, categories, function, iterations = 5, num_partitions = 2)
     return results_table
 
 def  resultsToCSV(name_alg, name_db, results):
-    f = open('Resultados/'+name_db+name_alg+'.csv','a')
+    f = open('Resultados/'+name_db+name_alg+'.csv','w')
     f.write("partition,in,out,red,T\n")
 
     for i in range(len(results)):
         row = 'Particion ' + str(i//2+1) + '-' + str(i%2+1)
         for num in results[i]:
-            row += ', ' + str(num)
+            row += ', ' + str('%4f' % num)
         f.write(row +  '\n')
 
     mean_results = np.mean(results, axis=0)
-    f.write('Media, ' + str(mean_results[0]) + ', ' + str(mean_results[1]) + ', ' + str(mean_results[2]) + ', ' + str(mean_results[3]) + '\n')
+    f.write('Media, ' + str('%4f' % mean_results[0]) + ', ' + str('%4f' % mean_results[1]) + ', ' + str('%4f' % mean_results[2]) + ', ' + str('%4f' % mean_results[3]) + '\n')
     f.close()
 
 

@@ -15,7 +15,7 @@ def tabuSearch(train_data, train_categ):
     cost_best_sol = cost_current_sol
 
     # Determinamos el número de iteraciones
-    max_iter = 5000//max_neighbours
+    max_iter = 15000//max_neighbours
 
     # Lista tabú
     tabu_list = np.array([-1 for i in range(num_features//3)])

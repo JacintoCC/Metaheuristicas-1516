@@ -40,8 +40,11 @@ def makePartitions(data, categories, random, num_partitions = 2):
     # Formamos una lista de categorías
     set_cat = list(set(categories))
     num_categories = len(set_cat)
+
+    # Contamos el número de datos de cada clase para enviarlo posteriormente a cada partición
     dict_categories = dict([(set_cat[i],i) for i in range(num_categories)])
     len_cat_partitions = [list(categories).count(i)//num_partitions for i in set_cat]
+
     data_categorized = [[] for i in range(num_categories)]
 
     # Creación de las estructuras que devolveremos

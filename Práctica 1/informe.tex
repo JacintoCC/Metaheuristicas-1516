@@ -14,6 +14,7 @@
 \usepackage{geometry}
 \usepackage{changepage}
 \usepackage{pgfplots}
+\usepackage{float}
 
 
 \author{Jacinto Carrasco Castillo 	\\
@@ -22,9 +23,7 @@
 		
 \title{	Práctica 1 Metaheurísticas.\\
 		Búsqueda por trayectorias para el problema \\
-		de la selección de características\\
-		Curso 15-16\\
-		Algoritmos: SFS, LS, SA, TS, Extended TS}
+		de la selección de características}
 
 \newcommand{\maketable}[1]{
 \begin{adjustwidth}{-1cm}{}
@@ -33,7 +32,7 @@
 	every head row/.style={
 		before row={%
 				\hline
-				& \multicolumn{4}{c|}{WDBC} & \multicolumn{4}{c|}{Movement Libras} & \multicolumn{4}{c|}{Arrythmia}\\
+				& \multicolumn{4}{c|}{WDBC} & \multicolumn{4}{c|}{Movement Libras} & \multicolumn{4}{c|}{Arrhythmia}\\
 				\cline{2-13}
 		},
 		after row=\cline{2-13}\hline,
@@ -108,9 +107,30 @@
 \pgfplotstableread[col sep=comma]{Resultados/lETS.csv}\datalETS
 \pgfplotstableread[col sep=comma]{Resultados/aETS.csv}\dataaETS
 
-\begin{titlepage}
+
 \maketitle
-\end{titlepage}
+
+\begin{center}
+Curso 2015-2016\\
+
+Problema de Selección de Características.\\ 
+
+Grupo de prácticas: Viernes 17:30-19:30\\
+
+Quinto curso del Doble Grado en Ingeniería Informática y Matemáticas.\\
+\textit{ }\\
+\end{center}
+
+Algoritmos considerados:
+\begin{enumerate}
+\item Greedy Sequential Forward Selection.
+\item Búsqueda Local.
+\item Enfriamiento Simulado.
+\item Búsqueda Tabú Básica.
+\item Búsqueda Tabú Extendida.
+\end{enumerate}
+
+\newpage
 
 \tableofcontents
 \newpage
@@ -396,7 +416,7 @@ END
 
 \section{Procedimiento para desarrollar la práctica}
 
-El código de la práctica está realizado en $\texttt{Python}$. Comencé por el algoritmo del KNN y el algoritmo $\textit{greedy}$ SFS. Sin embargo, viendo los tiempos (la iteración en la base de datos de Arrythmia duraba en torno a 10 minutos) me decanté por usar el módulo de $\texttt{Python}$ $\texttt{sklearn}$ para realizar la normalización de los datos, la validación cruzada y el algoritmo KNN, permitiendo entrenar el clasificador con los datos y obtener un $\textit{score}$ al comprobar si concuerda la clase predicha con la original.\\
+El código de la práctica está realizado en $\texttt{Python 3.5.1}$. Comencé por el algoritmo del KNN y el algoritmo $\textit{greedy}$ SFS. Sin embargo, viendo los tiempos (la iteración en la base de datos de Arrhythmia duraba en torno a 10 minutos) me decanté por usar el módulo de $\texttt{Python}$ $\texttt{sklearn}$ para realizar la normalización de los datos, la validación cruzada y el algoritmo KNN, permitiendo entrenar el clasificador con los datos y obtener un $\textit{score}$ al comprobar si concuerda la clase predicha con la original.\\
 
 Los paquetes utilizados son $\texttt{sklearn}$, como se ha mencionado, $\texttt{scipy}$ para leer de una manera sencilla la base de datos, $\texttt{numpy}$ para el manejo de vectores y matrices y tratar que sea algo más eficiente en lugar de las listas de $\texttt{Python}$ y $\texttt{ctype}$ para importar el generador de números aleatorios en $\texttt{C}$ disponible en la página web de la asignatura. La semilla con la que he realizado las ejecuciones es $3141592$, insertada tanto en el generador en $\texttt{C}$ como por el generador de número de aleatorios de $\texttt{numpy}$. He usado los dos porque pretendía usar el primero, que es con el que se realizan las particiones, pero al llegar a los métodos que usan los generadores de números pseudoaleatorios en su funcionamiento me di cuenta de que tendría que repetir el código de importación del módulo en $\texttt{C}$ para cada método, por lo que opté por usar en los métodos el $\texttt{random}$ de $\texttt{numpy}$. Mientras he ido realizando la práctica he ido creando funciones para permitir un más cómodo manejo del programa intentando que el código fuese entendible.
 \subsection{Ejecución del programa}
@@ -407,24 +427,43 @@ Los parámetros que acepta el programa son:
 \item Algoritmo utilizado: Por defecto es el KNN. Para introducir uno distinto, se usa $\texttt{-a}$ seguido de una letra entre $\texttt{K,G,L,S,T,E}$ que se corresponden con KNN, \textit{greedy} SFS, \textit{local search}, \textit{simulated annealing}, \textit{tabu search} y \textit{extended tabu search}, respectivamente.
 \item Semilla. Para incluir una semilla, se añade $\texttt{-seed}$ seguido del número que usaremos como semilla. Por defecto es 3141592.
 \item Salida por pantalla o a fichero. Se utiliza con el parámetro opcional \texttt{-write} para escribir en un fichero en una carpeta llamada \texttt{Resultados}. El nombre del fichero será la primera letra de la base de datos utilizada seguida por las iniciales del algoritmo. Incluye también la media para cada columna en la última fila.
+\item \texttt{-h} o \texttt{--help} para mostrar la ayuda y cómo se introducen los parámetros.
 \end{itemize}
 Por tanto, la ejecución del programa se hará de la siguiente manera:
 \[ \texttt{python Practica1.py base\_de\_datos [-a algoritmo -seed semilla -write T/F ]} \]
 Si por ejemplo queremos lanzar la base de datos de \texttt{WDBC} con la búsqueda local, semilla 123456 y que los resultados se muestren por pantalla, escribimos
 \[ \texttt{python Practica1.py W -a L -seed 123456}\]
-Si optamos por la base de datos \texttt{Arrythmia} con la búsqueda tabú extendida y guardar el resultado en un fichero:
+Si optamos por la base de datos \texttt{Arrhythmia} con la búsqueda tabú extendida y guardar el resultado en un fichero:
 \[ \texttt{python Practica1.py A -a E -write True}\]
+Para mostrar la introducción de parámetros:
+\[ \texttt{python Practica1.py --help}\]
 
 \section{Experimentos y análisis de resultados}
 
-\subsection{KNN}
+\subsection{Descripción de los casos}
+
+Los casos del problema planteados son tres, cada uno de ellos asociado a una base de datos:
+
+\begin{itemize}
+\item WDBC: Base de datos con los atributos estimados a partir de una imagen de una aspiración de una masa en la mama. Tiene 569 ejemplos, 30 atributos y debemos clasificar cada individuo en dos valores.
+\item Movement Libras: Base de datos con la representación de los movimientos de la mano en el lenguaje de signos LIBRAS. Tiene 360 ejemplos y consta de 91 atributos.
+\item Arrhythmia: Contiene datos de pacientes durante la presencia y ausencia de arritmia cardíaca. Tiene 386 ejemplos y 278 atributos para categorizar en 5 clases.
+\end{itemize}
+
+Hay que mencionar que tanto la ejecución de la búsqueda tabú como la búsqueda tabú extendida se han realizado no con 15000 comprobaciones como indica el guión de la práctica sino con 5000 debido a que lleva demasiado tiempo ejecutarlas al no tener otra condición de parada que realizar estas ejecuciones. En la medida de los tiempos se ha incluido la calificación del conjunto de test, con lo que se añade un poco de tiempo extra en cada iteración, que no es representativo con respecto a lo que se tarda en obtener la solución. Esto nos da una idea sobre la influencia del tamaño de los datos sobre cada evaluación de la solución actual y la influencia que esto tiene en el tiempo para obtener la solución, pues no sólo influye el tamaño del espacio de búsqueda.
+
+
+\subsection{Resultados}
+\subsubsection{KNN}
 % Tablas Resumen KNN
 \makeresume{\dataKNN}{\datawKNN}{\datalKNN}{\dataaKNN}
 
 % Salida por pantalla
 \maketable{\dataKNN}
 
-\subsection{SFS}
+En primer lugar analizaremos las diferencias en las tasas de acierto en las bases de datos. La mayor tasa de acierto se obtiene en la base de datos \texttt{WDBC}. Es comprensible puesto que hay muchos más datos con respecto al número de características y clases que en las otras dos bases de datos. Puesto que en este método los datos de entrenamiento y test no tienen ninguna influencia en la solución, se observa que la diferencia entre la tasa de acierto dentro y fuera de la muestra es muy pequeña, y que incluso en la base de datos de \texttt{Libras} fuera de la muestra hay una mayor tasa de acierto. Esto es simplemente por las particiones realizadas. Observamos también que, aunque la diferencia en los tiempos sea mínima, esto es el tiempo en evaluar un conjunto de test, que es lo que iremos realizando repetidas veces en los demás métodos, con lo que se notará aún más.
+
+\subsubsection{SFS}
 
 % Tablas Resumen SFS
 \makeresume{\dataSFS}{\datawSFS}{\datalSFS}{\dataaSFS}
@@ -432,35 +471,45 @@ Si optamos por la base de datos \texttt{Arrythmia} con la búsqueda tabú extend
 % Salida por pantalla
 \maketable{\dataSFS}
 
-\subsection{Local Search}
+Con este simple algoritmo \textit{greedy} ya se aprecia un incremento en la tasa de acierto. Las tasas de reducción son muy elevadas, ya que hemos partido de la solución sin ninguna característica. 
+
+\subsubsection{Local Search}
 % Tablas Resumen LS
 \makeresume{\dataLS}{\datawLS}{\datalLS}{\dataaLS}
 
 % Salida por pantalla
 \maketable{\dataLS}
 
-\subsection{Simulated Annealing}
+En la búsqueda local, cuyos resultados debemos poner en contexto, se comprueba cómo con un algoritmo muy simple, y con unos tiempos de ejecución menores que el algoritmo \textit{greedy} se llega a un buen resultado (que será un óptimo local).
+
+\subsubsection{Simulated Annealing}
 % Tablas Resumen SA
 \makeresume{\dataSA}{\datawSA}{\datalSA}{\dataaSA}
 
 % Salida por pantalla
 \maketable{\dataSA}
 
-\subsection{Tabu Search}
+En cambio, para el enfriamiento simulado los tiempos comienzan a crecer en mayor medida, en especial para el caso de \texttt{Arrhythmia}. Vemos como pese a haber realizado un mayor número de comprobaciones, los resultados son muy semejantes, e incluso un poco peores.
+
+\subsubsection{Tabu Search}
 % Tablas Resumen TS
 \makeresume{\dataTS}{\datawTS}{\datalTS}{\dataaTS}
 
 % Salida por pantalla
 \maketable{\dataTS}
 
-\subsection{Extended Tabu Search}
+\textbf{Los datos se han obtenido realizando 5000 evaluaciones}. Aquí ya el tiempo, debido al número de comprobaciones realizadas crece mucho más. Sin embargo, sí que se aprecia una mejora con respecto a otros métodos.
+
+\subsubsection{Extended Tabu Search}
 % Tablas Resumen ETS
 \makeresume{\dataETS}{\datawETS}{\datalETS}{\dataaETS}
 
 % Salida por pantalla
 \maketable{\dataETS}
 
-\subsection{Comparación}
+\textbf{Los datos se han obtenido realizando 5000 evaluaciones}. Para la búsqueda tabú extendida vemos como el tiempo se incrementa un poco más que en la tabú y sin embargo el resultado no es mejor. Esto nos hace pensar que quizá debemos tomar otra estrategia a la hora de reinicializar las soluciones o llevar la memoria a largo plazo.
+
+\subsubsection{Comparación}
 
 % Tabla Global
 \pgfplotstableread[col sep=comma]{
@@ -479,7 +528,7 @@ BT extendida,	\getElement{\dataETS}{10}{in},\getElement{\dataETS}{10}{out},\getE
 	every head row/.style={
 		before row={%
 				\hline
-				& \multicolumn{4}{c|}{WDBC} & \multicolumn{4}{c|}{Movement Libras} & \multicolumn{4}{c|}{Arrythmia}\\
+				& \multicolumn{4}{c|}{WDBC} & \multicolumn{4}{c|}{Movement Libras} & \multicolumn{4}{c|}{Arrhythmia}\\
 				\cline{2-13}
 		},
 		after row=\cline{2-13}\hline,
@@ -506,9 +555,43 @@ BT extendida,	\getElement{\dataETS}{10}{in},\getElement{\dataETS}{10}{out},\getE
 }
 \end{adjustwidth}
 
+\subsection{Análisis de los resultados}
+
+\begin{figure}[h!]
+\centering
+\includegraphics[width=0.5\textwidth]{Resultados/IN-alg}
+\caption{Tasa de acierto en el conjunto de entrenamiento}
+\end{figure}
+
+De la comparación de la tasa de acierto dentro de la muestra para cada algoritmo y base de datos se desprende que para el problema de clasificación, realizar una selección de características siempre es recomendable, pues se obtiene mayor tasa de acierto que usando sólo KNN. Esto no es así para \texttt{Libras} y búsqueda local y enfriamiento simulado. Esto  se puede deber al elevado número de características y clases, en relación al número de datos. Se aprecia también que la búsqueda tabú mejora los resultados del enfriamiento simulado, con lo que quizá deberíamos pensar en otra exploración de vecinos. Por último, la alta tasa de acierto para SFS en \texttt{Arrhythmia} nos indica que para un número elevado de características y pocas clases, se puede dar que pocas características sean las que contienen la información, y que por tanto ir cogiendo las mejores sea una buena estrategia. Podríamos tener más certeza sobre esto si, por ejemplo, realizamos una búsqueda sobre el espacio de soluciones que sólo tengan un número fijo y pequeño de características (usaríamos otra representación del problema) y comparar los resultados (teniendo en cuenta que esto también sería heurística y que nos costaría tanto o más obtener la mejor selección).
+
+\begin{figure}[h!]
+\centering
+\includegraphics[width=0.5\textwidth]{Resultados/OUT-alg}
+\caption{Tasa de acierto fuera del conjunto de entrenamiento}
+\end{figure}
+
+Para la tasa de acierto fuera de la muestra, vemos como el orden de los algoritmos es distinto y que ahora no tomar ninguna característica no es una opción a descartar. Esto se explica sencillamente porque los algoritmos de búsqueda han ajustado las características a los datos, y sin embargo, de manera general puede no resultar la mejor opción. Se aprecia ahora que en la base de datos \texttt{WDBC} las tasas son siempre más parejas y mejores (aunque en este caso se requiera una mayor certeza que en el de \texttt{Libras}, por ejemplo) que en las otras. También podemos deducir que para el caso de \texttt{Libras} y \texttt{Arrhythmia} el resultado es más desigual en especial para la búsqueda tabú.
+
+\begin{figure}[h!]
+\centering
+\includegraphics[width=0.5\textwidth]{Resultados/red-alg}
+\caption{Porcentaje de reducción de las características}
+\end{figure}
+
+En cuanto al porcentaje de reducción, no tiene mucho sentido hacer un análisis más allá de ver cómo el SFS en \texttt{Arrhythmia} tiene un porcentaje muy elevado y es el mejor algoritmo. Esto va en la línea de lo anteriormente comentado. Como la función de evaluación no incluía nada sobre tener el menor número posible de características, los resultados en los demás algoritmos son poco más que aleatorios. Sin embargo, podemos relacionar el buen comportamiento en \texttt{Arrhythmia} de la búsqueda tabú y la ligera mayor reducción del número de características con que ese algoritmo va en la buena dirección.
+
+\begin{figure}[h!]
+\centering
+\includegraphics[width=0.5\textwidth]{Resultados/Tiempo}
+\caption{Tiempos empleados por el algoritmo}
+\end{figure}
+
+En cambio, para los tiempos, incluso teniendo en cuenta que la búsqueda tabú y la tabú extendida no han realizado todas las comprobaciones, sino sólo 5000, el tiempo es mucho mayor que para los demás métodos. Lo que sí es más estable con respecto al tamaño del problema. Mientras que la búsqueda local y el \textit{greedy} SFS tienen un crecimiento más limitado, el enfriamiento simulado aumenta mucho más. La búsqueda tabú tarda un mayor tiempo en \texttt{WDBC}, y esto se puede deber a que la lista tabú coincide en tamaño con el número de características, limitando más la variación de las soluciones, también limitado porque en esta base de datos se encuentra un muy buen resultado en poco tiempo (los datos son más semejantes y hay menos clases) y las mejoras son más difíciles de encontrar.
+
 \section{Bibliografía}
 \begin{itemize}
 \item \href{http://scikit-learn.org/stable/modules/neighbors.html}{Módulo en \texttt{scikit} para KNN}
-\item Para realizar las tablas \href{https://www.complang.tuwien.ac.at/doc/texlive-pictures-doc/latex/pgfplots/pgfplotstable.pdf}{Manual PGFPLOTSTABLE}
+\item Para realizar las tablas en \LaTeX: \href{https://www.complang.tuwien.ac.at/doc/texlive-pictures-doc/latex/pgfplots/pgfplotstable.pdf}{Manual PGFPLOTSTABLE}
 \end{itemize}
 \end{document}

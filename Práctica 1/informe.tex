@@ -1,6 +1,7 @@
 \documentclass[11pt,leqno]{article}
 \usepackage[spanish,activeacute]{babel}
 \usepackage[utf8]{inputenc}
+\usepackage{etex}
 \usepackage{amsfonts}
 \usepackage{enumerate}
 \usepackage{listings}
@@ -12,6 +13,7 @@
 \usepackage{verbatim}
 \usepackage{geometry}
 \usepackage{changepage}
+\usepackage{pgfplots}
 
 
 \author{Jacinto Carrasco Castillo 	\\
@@ -288,7 +290,8 @@ tabuSearch(data, categories) BEGIN
       neighbours $\leftarrow$ {flip(solution,i): i in characteristics}
       
       sort (neighbours, characteristics) 
-            by getValue(data, categories, neighbours) order descending
+            by getValue(data, categories, neighbours) 
+            order descending
       
 	  
       FOR neigh,char IN (neighbours, characteristics)
@@ -324,7 +327,7 @@ Cuando llevemos diez pasos sin haber encontrado una solución mejor que la encon
 Además de esto, con la intención de cambiar la estrategia seguida hasta el momento, se cambia la longitud de la lista tabú de forma aleatoria en un $50\%$. Si el tamaño de la lista tabú aumenta, estaremos almacenando más posiciones con lo que seremos más restrictivos a la hora de cambiar una característica recientemente modificada, en cambio si la hacemos más pequeña, sí que permitiremos estos cambios.
 
 	\begin{lstlisting}[mathescape=true]
-tabuSearch(data, categories) BEGIN
+extendedTabuSearch(data, categories) BEGIN
    solution $\leftarrow$ generateRandomSolution()
    current_value $\leftarrow$ getValue(data, categories, solution)
    
@@ -341,7 +344,8 @@ tabuSearch(data, categories) BEGIN
       neighbours $\leftarrow$ {flip(solution,i): i in characteristics}
       
       sort (neighbours, characteristics) 
-            by getValue(data, categories, neighbours) order descending
+            by getValue(data, categories, neighbours) 
+            order descending
       
 	  
       FOR neigh,char IN (neighbours, characteristics)
@@ -368,15 +372,59 @@ END
 
 \section{Algoritmo de comparación}
 
+Como algoritmo de comparación tenemos el algoritmo $\textit{greedy}$ SFS. Partiendo de un vector con ninguna característica seleccionada, exploramos por el entorno y nos quedamos con el vecino que genera una mejor tasa de acierto. Repetimos este proceso hasta que ningún vecino aporta una mejora a la solución obtenida.
+
+	\begin{lstlisting}[mathescape=true]
+greedySFS(data, categories) BEGIN
+   solution $\leftarrow$ {0,...,0: size = num_features}
+   current_value $\leftarrow$ getValue(data, categories, solution)
+   
+   REPEAT
+      neighbours $\leftarrow$ {flip(solution,i): i in characteristics}
+   
+      best_value $\leftarrow$ $\max_{\texttt{neighbours}}$ getValue(data, categories, $\cdot$)
+      
+      IF best_value > current_value THEN
+         solution $\leftarrow$ $argmax_{\texttt{neighbours}}$ getValue(data, categories, $\cdot$)
+   
+   WHILE(best_value > current_value)
+   
+   RETURN solution
+END
+	\end{lstlisting}
+
+
 \section{Procedimiento para desarrollar la práctica}
+
+El código de la práctica está realizado en $\texttt{Python}$. Comencé por el algoritmo del KNN y el algoritmo $\textit{greedy}$ SFS. Sin embargo, viendo los tiempos (la iteración en la base de datos de Arrythmia duraba en torno a 10 minutos) me decanté por usar el módulo de $\texttt{Python}$ $\texttt{sklearn}$ para realizar la normalización de los datos, la validación cruzada y el algoritmo KNN, permitiendo entrenar el clasificador con los datos y obtener un $\textit{score}$ al comprobar si concuerda la clase predicha con la original.\\
+
+Los paquetes utilizados son $\texttt{sklearn}$, como se ha mencionado, $\texttt{scipy}$ para leer de una manera sencilla la base de datos, $\texttt{numpy}$ para el manejo de vectores y matrices y tratar que sea algo más eficiente en lugar de las listas de $\texttt{Python}$ y $\texttt{ctype}$ para importar el generador de números aleatorios en $\texttt{C}$ disponible en la página web de la asignatura. La semilla con la que he realizado las ejecuciones es $3141592$, insertada tanto en el generador en $\texttt{C}$ como por el generador de número de aleatorios de $\texttt{numpy}$. He usado los dos porque pretendía usar el primero, que es con el que se realizan las particiones, pero al llegar a los métodos que usan los generadores de números pseudoaleatorios en su funcionamiento me di cuenta de que tendría que repetir el código de importación del módulo en $\texttt{C}$ para cada método, por lo que opté por usar en los métodos el $\texttt{random}$ de $\texttt{numpy}$. Mientras he ido realizando la práctica he ido creando funciones para permitir un más cómodo manejo del programa intentando que el código fuese entendible.
+\subsection{Ejecución del programa}
+La salida de cada ejecución (10 iteraciones de un algoritmo con una base de datos) se puede elegir entre mostrar por pantalla o redirigir a un archivo $\texttt{.csv}$ para manejarlo posteriormente, por ejemplo para incluir la tabla en \LaTeX.\\
+Los parámetros que acepta el programa son:
+\begin{itemize}
+\item Base de datos: Será una letra $\texttt{W,L,A}$ que representa cada una de las bases de datos a utilizar. Este parámetro es el único obligatorio.
+\item Algoritmo utilizado: Por defecto es el KNN. Para introducir uno distinto, se usa $\texttt{-a}$ seguido de una letra entre $\texttt{K,G,L,S,T,E}$ que se corresponden con KNN, \textit{greedy} SFS, \textit{local search}, \textit{simulated annealing}, \textit{tabu search} y \textit{extended tabu search}, respectivamente.
+\item Semilla. Para incluir una semilla, se añade $\texttt{-seed}$ seguido del número que usaremos como semilla. Por defecto es 3141592.
+\item Salida por pantalla o a fichero. Se utiliza con el parámetro opcional \texttt{-write} para escribir en un fichero en una carpeta llamada \texttt{Resultados}. El nombre del fichero será la primera letra de la base de datos utilizada seguida por las iniciales del algoritmo. Incluye también la media para cada columna en la última fila.
+\end{itemize}
+Por tanto, la ejecución del programa se hará de la siguiente manera:
+\[ \texttt{python Practica1.py base\_de\_datos [-a algoritmo -seed semilla -write T/F ]} \]
+Si por ejemplo queremos lanzar la base de datos de \texttt{WDBC} con la búsqueda local, semilla 123456 y que los resultados se muestren por pantalla, escribimos
+\[ \texttt{python Practica1.py W -a L -seed 123456}\]
+Si optamos por la base de datos \texttt{Arrythmia} con la búsqueda tabú extendida y guardar el resultado en un fichero:
+\[ \texttt{python Practica1.py A -a E -write True}\]
 
 \section{Experimentos y análisis de resultados}
 
+\subsection{KNN}
 % Tablas Resumen KNN
 \makeresume{\dataKNN}{\datawKNN}{\datalKNN}{\dataaKNN}
 
 % Salida por pantalla
 \maketable{\dataKNN}
+
+\subsection{SFS}
 
 % Tablas Resumen SFS
 \makeresume{\dataSFS}{\datawSFS}{\datalSFS}{\dataaSFS}
@@ -384,29 +432,35 @@ END
 % Salida por pantalla
 \maketable{\dataSFS}
 
+\subsection{Local Search}
 % Tablas Resumen LS
 \makeresume{\dataLS}{\datawLS}{\datalLS}{\dataaLS}
 
 % Salida por pantalla
 \maketable{\dataLS}
 
+\subsection{Simulated Annealing}
 % Tablas Resumen SA
 \makeresume{\dataSA}{\datawSA}{\datalSA}{\dataaSA}
 
 % Salida por pantalla
 \maketable{\dataSA}
 
+\subsection{Tabu Search}
 % Tablas Resumen TS
 \makeresume{\dataTS}{\datawTS}{\datalTS}{\dataaTS}
 
 % Salida por pantalla
 \maketable{\dataTS}
 
+\subsection{Extended Tabu Search}
 % Tablas Resumen ETS
 \makeresume{\dataETS}{\datawETS}{\datalETS}{\dataaETS}
 
 % Salida por pantalla
 \maketable{\dataETS}
+
+\subsection{Comparación}
 
 % Tabla Global
 \pgfplotstableread[col sep=comma]{
@@ -454,6 +508,7 @@ BT extendida,	\getElement{\dataETS}{10}{in},\getElement{\dataETS}{10}{out},\getE
 
 \section{Bibliografía}
 \begin{itemize}
-\item \href{https://www.complang.tuwien.ac.at/doc/texlive-pictures-doc/latex/pgfplots/pgfplotstable.pdf}{Manual PGFPLOTSTABLE}
+\item \href{http://scikit-learn.org/stable/modules/neighbors.html}{Módulo en \texttt{scikit} para KNN}
+\item Para realizar las tablas \href{https://www.complang.tuwien.ac.at/doc/texlive-pictures-doc/latex/pgfplots/pgfplotstable.pdf}{Manual PGFPLOTSTABLE}
 \end{itemize}
 \end{document}

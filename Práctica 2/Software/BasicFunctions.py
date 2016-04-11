@@ -1,6 +1,9 @@
 import numpy as np
 from sklearn import neighbors
 from sklearn import cross_validation
+from tempfile import NamedTemporaryFile
+import shutil
+import csv
 
 # Función para cambiar el valor i-ésimo de s
 def flip(s, i):
@@ -77,6 +80,9 @@ def makePartitions(data, categories, random, num_partitions = 2):
 
 # Función para escribir los resultados en un fichero .csv
 def  resultsToCSV(name_alg, name_db, results):
+    alg_to_index = {'KNN':1,'SFS':2, 'BMB':3,'GRASP':4,'ILS':5}
+    db_to_index = {'w':2,'l':6, 'a':10}
+
     f = open('Resultados/'+name_db+name_alg+'.csv','w')
     f.write("partition,in,out,red,T\n")
 
@@ -95,3 +101,21 @@ def  resultsToCSV(name_alg, name_db, results):
     f.write('Min, ' + str('%.4f' % min_results[0]) + ', ' + str('%.4f' % min_results[1]) + ', ' + str('%.4f' % min_results[2]) + ', ' + str('%.4f' % min_results[3]) + '\n')
     f.write('Desv. Típica,'  + str('%.4f' % std_results[0]) + ', ' + str('%.4f' % std_results[1]) + ', ' + str('%.4f' % std_results[2]) + ', ' + str('%.4f' % std_results[3]) + '\n')
     f.close()
+
+    alg_index = alg_to_index[name_alg]
+    db_index = db_to_index[name_db]
+
+    filename = 'Resultados/results.csv'
+    tempfile = NamedTemporaryFile(delete=False)
+
+    r = csv.reader(open(filename))
+    lines = [l for l in r]
+
+    lines[alg_index][db_index]= str('%.4f' % mean_results[0])
+    lines[alg_index][db_index+1]= str('%.4f' % mean_results[1])
+    lines[alg_index][db_index+2]= str('%.4f' % mean_results[2])
+    lines[alg_index][db_index+3]= str('%.4f' % mean_results[3])
+
+    print(lines)
+    writer = csv.writer(open(filename, 'w'))
+    writer.writerows(lines)

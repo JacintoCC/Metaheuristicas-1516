@@ -15,6 +15,7 @@
 \usepackage{changepage}
 \usepackage{pgfplots}
 \usepackage{float}
+\usepgfplotslibrary{colorbrewer}
 
 
 \author{Jacinto Carrasco Castillo 	\\
@@ -101,6 +102,8 @@
 \pgfplotstableread[col sep=comma]{Software/Resultados/wILS.csv}\datawILS
 \pgfplotstableread[col sep=comma]{Software/Resultados/lILS.csv}\datalILS
 \pgfplotstableread[col sep=comma]{Software/Resultados/aILS.csv}\dataaILS
+
+\pgfplotstableread[col sep=comma]{Software/Resultados/results.csv}\dataGlobal
 
 \maketitle
 
@@ -304,14 +307,6 @@ Hay que mencionar que tanto la ejecución de la búsqueda tabú como la búsqued
 \subsubsection{Comparación}
 
 % Tabla Global
-\pgfplotstableread[col sep=comma]{
-algorithm,inW,outW,redW,TW,inL,outL,redL,TL,inA,outA,redA,TA
-3-NN,\getElement{\dataKNN}{10}{in},\getElement{\dataKNN}{10}{out},\getElement{\dataKNN}{10}{red},\getElement{\dataKNN}{10}{T},\getElement{\dataKNN}{10}{inL},\getElement{\dataKNN}{10}{outL},\getElement{\dataKNN}{10}{redL},\getElement{\dataKNN}{10}{tL},\getElement{\dataKNN}{10}{inA},\getElement{\dataKNN}{10}{outA},\getElement{\dataKNN}{10}{redA},\getElement{\dataKNN}{10}{tA}
-SFS,\getElement{\dataSFS}{10}{in},\getElement{\dataSFS}{10}{out},\getElement{\dataSFS}{10}{red},\getElement{\dataSFS}{10}{T},\getElement{\dataSFS}{10}{inL},\getElement{\dataSFS}{10}{outL},\getElement{\dataSFS}{10}{redL},\getElement{\dataSFS}{10}{tL},\getElement{\dataSFS}{10}{inA},\getElement{\dataSFS}{10}{outA},\getElement{\dataSFS}{10}{redA},\getElement{\dataSFS}{10}{tA}
-BMB,\getElement{\dataBMB}{10}{in},\getElement{\dataBMB}{10}{out},\getElement{\dataBMB}{10}{red},\getElement{\dataBMB}{10}{T},\getElement{\dataBMB}{10}{inL},\getElement{\dataBMB}{10}{outL},\getElement{\dataBMB}{10}{redL},\getElement{\dataBMB}{10}{tL},\getElement{\dataBMB}{10}{inA},\getElement{\dataBMB}{10}{outA},\getElement{\dataBMB}{10}{redA},\getElement{\dataBMB}{10}{tA}
-GRASP,	\getElement{\dataGRASP}{10}{in},\getElement{\dataGRASP}{10}{out},\getElement{\dataGRASP}{10}{red},\getElement{\dataGRASP}{10}{T},\getElement{\dataGRASP}{10}{inL},\getElement{\dataGRASP}{10}{outL},\getElement{\dataGRASP}{10}{redL},\getElement{\dataGRASP}{10}{tL},\getElement{\dataGRASP}{10}{inA},\getElement{\dataGRASP}{10}{outA},\getElement{\dataGRASP}{10}{redA},\getElement{\dataGRASP}{10}{tA}
-ILS,\getElement{\dataILS}{10}{in},\getElement{\dataILS}{10}{out},\getElement{\dataILS}{10}{red},\getElement{\dataILS}{10}{T},\getElement{\dataILS}{10}{inL},\getElement{\dataILS}{10}{outL},\getElement{\dataILS}{10}{redL},\getElement{\dataILS}{10}{tL},\getElement{\dataILS}{10}{inA},\getElement{\dataILS}{10}{outA},\getElement{\dataILS}{10}{redA},\getElement{\dataILS}{10}{tA}
-}\dataGlobal
 
 \begin{adjustwidth}{-1cm}{}
 \resizebox{\linewidth}{!}{
@@ -325,6 +320,7 @@ ILS,\getElement{\dataILS}{10}{in},\getElement{\dataILS}{10}{out},\getElement{\da
 		after row=\cline{2-13}\hline,
 		column type=c
 	},
+	columns={algorithm,inW,outW,redW,TW,inL,outL,redL,TL,inA,outA,redA,TA},
 	every first column/.style={ column type/.add={|}{} },
 	every last row/.style={after row=\hline},
 	column type/.add={}{|},
@@ -348,6 +344,120 @@ ILS,\getElement{\dataILS}{10}{in},\getElement{\dataILS}{10}{out},\getElement{\da
 
 \subsection{Análisis de los resultados}
 
+\subsubsection{Tasa In}
+\begin{tikzpicture}
+\begin{axis}[
+    ybar,
+    xtick=data,% crucial line for the xticklabels directive
+    ylabel=Tasa IN,
+    ymin = 50,
+    legend style={at={(0.5,-0.15)},anchor=north,legend columns=-1},
+    xticklabels from table={\dataGlobal}{algorithm}
+    %,colorbrewer cycle list=Set1
+]
+\addplot table [
+    x=0,
+    y=inW
+]{\dataGlobal};
+
+\addplot table [
+    x=0,
+    y=inL
+]{\dataGlobal};
+
+\addplot  table [
+    x=0,
+    y=inA
+]{\dataGlobal};
+\legend{WDBC,Libras,Arrhythmia}
+\end{axis}
+\end{tikzpicture}
+
+\subsubsection{Tasa Out}
+\begin{tikzpicture}
+\begin{axis}[
+    ybar,
+    xtick=data,% crucial line for the xticklabels directive
+    ylabel=Tasa OUT,
+    ymin = 40,
+    legend style={at={(0.5,-0.15)},anchor=north,legend columns=-1},
+    xticklabels from table={\dataGlobal}{algorithm}
+]
+\addplot table [
+    x=0,
+    y=outW
+]{\dataGlobal};
+
+\addplot table [
+    x=0,
+    y=outL
+]{\dataGlobal};
+
+\addplot table [
+    x=0,
+    y=outA
+]{\dataGlobal};
+\legend{WDBC,Libras,Arrhythmia}
+\end{axis}
+\end{tikzpicture}
+
+
+\subsubsection{Tasa reducción}
+\begin{tikzpicture}
+\begin{axis}[
+    ybar,
+    xtick=data,% crucial line for the xticklabels directive
+    ylabel=Tasa red.,
+    ymin = 0,
+    legend style={at={(0.5,-0.15)},anchor=north,legend columns=-1},
+    xticklabels from table={\dataGlobal}{algorithm}
+]
+\addplot table [
+    x=0,
+    y=redW
+]{\dataGlobal};
+
+\addplot table [
+    x=0,
+    y=redL
+]{\dataGlobal};
+
+\addplot table [
+    x=0,
+    y=redA
+]{\dataGlobal};
+\legend{WDBC,Libras,Arrhythmia}
+\end{axis}
+\end{tikzpicture}
+
+\subsubsection{Tiempos}
+\pgfplotstabletranspose[input colnames to=DB,columns={TW,TL,TA}]\dataTimes{\dataGlobal}
+\pgfplotstabletypeset[string type]\dataTimes
+
+
+\begin{tikzpicture}
+\begin{axis}[
+    ybar,
+    ylabel=Tiempo (s),
+    ymin = 0,
+    legend style={at={(1.2,0.7)},anchor=north},
+    symbolic x coords={TW,TL,TA},
+    xticklabels={WDBC,Libras,Arrhythmia},
+    xtick=data% crucial line for the xticklabels directive
+]
+\addplot[sharp plot] 
+	table [x=DB, y=0]	{\dataTimes};
+\addplot[sharp plot,green] 
+	table [x=DB, y=1]	{\dataTimes};
+\addplot[sharp plot,blue] 
+	table [x=DB, y=2]	{\dataTimes};
+\addplot[sharp plot,red] 
+	table [x=DB, y=3]	{\dataTimes};
+\addplot[sharp plot,yellow] 
+	table [x=DB, y=4]	{\dataTimes};
+\legend{KNN,SFS,BMB,GRASP,ILS}
+\end{axis}
+\end{tikzpicture}
 
 \section{Bibliografía}
 \begin{itemize}

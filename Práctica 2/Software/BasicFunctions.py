@@ -74,3 +74,24 @@ def makePartitions(data, categories, random, num_partitions = 2):
     partitions_c=[np.array([item for sublist in partition for item in sublist ]) for partition in partitions_c]
 
     return([np.array(partitions_d,object),np.array(partitions_c,object)])
+
+# Función para escribir los resultados en un fichero .csv
+def  resultsToCSV(name_alg, name_db, results):
+    f = open('Resultados/'+name_db+name_alg+'.csv','w')
+    f.write("partition,in,out,red,T\n")
+
+    for i in range(len(results)):
+        row = 'Particion ' + str(i//2+1) + '-' + str(i%2+1)
+        for num in results[i]:
+            row += ', ' + str('%.4f' % num)
+        f.write(row +  '\n')
+
+    mean_results = np.mean(results, axis=0)
+    max_results = results.max(axis=0)
+    min_results = results.max(axis=0)
+    std_results = np.std(results, axis=0)
+    f.write('Media, ' + str('%.4f' % mean_results[0]) + ', ' + str('%.4f' % mean_results[1]) + ', ' + str('%.4f' % mean_results[2]) + ', ' + str('%.4f' % mean_results[3]) + '\n')
+    f.write('Max, ' + str('%.4f' % max_results[0]) + ', ' + str('%.4f' % max_results[1]) + ', ' + str('%.4f' % max_results[2]) + ', ' + str('%.4f' % max_results[3]) + '\n')
+    f.write('Min, ' + str('%.4f' % min_results[0]) + ', ' + str('%.4f' % min_results[1]) + ', ' + str('%.4f' % min_results[2]) + ', ' + str('%.4f' % min_results[3]) + '\n')
+    f.write('Desv. Típica,'  + str('%.4f' % std_results[0]) + ', ' + str('%.4f' % std_results[1]) + ', ' + str('%.4f' % std_results[2]) + ', ' + str('%.4f' % std_results[3]) + '\n')
+    f.close()

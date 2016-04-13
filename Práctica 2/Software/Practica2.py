@@ -7,9 +7,9 @@ from sklearn.preprocessing import MinMaxScaler
 from BasicFunctions import *
 from greedySFS import *
 from localSearch import *
-from simulatedAnnealing import *
-from tabuSearch import *
-from extendedTabuSearch import *
+from basicMSearch import *
+from grasp import *
+from iteratedLocalSearch import *
 
 #Importación del generador de números aleatorios en C
 try:
@@ -63,7 +63,7 @@ def main(args):
     #   base de datos a utilizar y algoritmo a utilizar
     database_name = 'Datos/'
     db_options = {'W': 'wdbc', 'L': 'movement_libras', 'A':'arrhythmia'}
-    alg_options = {'K': kNNSolution, 'S': greedySFS, 'B': localSearch, 'G':simAnnealing, 'I': tabuSearch}
+    alg_options = {'K': kNNSolution, 'S': greedySFS, 'B': basicMultibootSearch, 'G':grasp, 'I': iteratedLocalSearch}
     alg_names = {'K': "KNN", 'S': "SFS", 'B': "BMB", 'G':"GRASP", 'I': "ILS"}
     class_row = {'W': 0, 'L': 90, 'A':278}
 

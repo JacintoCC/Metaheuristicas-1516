@@ -78,11 +78,28 @@ def makePartitions(data, categories, random, num_partitions = 2):
 
     return([np.array(partitions_d,object),np.array(partitions_c,object)])
 
-# Función para escribir los resultados en un fichero .csv
-def  resultsToCSV(name_alg, name_db, results):
+# Función para actualizar el fichero .csv con las medias
+def meansToCSV(name_alg, name_db, mean_results):
     alg_to_index = {'KNN':1,'SFS':2, 'BMB':3,'GRASP':4,'ILS':5}
     db_to_index = {'w':2,'l':6, 'a':10}
 
+    alg_index = alg_to_index[name_alg]
+    db_index = db_to_index[name_db]
+
+    filename = 'Resultados/results.csv'
+    r = csv.reader(open(filename))
+    lines = [l for l in r]
+
+    lines[alg_index][db_index]= str('%.4f' % mean_results[0])
+    lines[alg_index][db_index+1]= str('%.4f' % mean_results[1])
+    lines[alg_index][db_index+2]= str('%.4f' % mean_results[2])
+    lines[alg_index][db_index+3]= str('%.4f' % mean_results[3])
+    
+    writer = csv.writer(open(filename, 'w'))
+    writer.writerows(lines)
+
+# Función para escribir los resultados en un fichero .csv
+def  resultsToCSV(name_alg, name_db, results):
     f = open('Resultados/'+name_db+name_alg+'.csv','w')
     f.write("partition,in,out,red,T\n")
 
@@ -102,20 +119,4 @@ def  resultsToCSV(name_alg, name_db, results):
     f.write('Desv. Típica,'  + str('%.4f' % std_results[0]) + ', ' + str('%.4f' % std_results[1]) + ', ' + str('%.4f' % std_results[2]) + ', ' + str('%.4f' % std_results[3]) + '\n')
     f.close()
 
-    alg_index = alg_to_index[name_alg]
-    db_index = db_to_index[name_db]
-
-    filename = 'Resultados/results.csv'
-    tempfile = NamedTemporaryFile(delete=False)
-
-    r = csv.reader(open(filename))
-    lines = [l for l in r]
-
-    lines[alg_index][db_index]= str('%.4f' % mean_results[0])
-    lines[alg_index][db_index+1]= str('%.4f' % mean_results[1])
-    lines[alg_index][db_index+2]= str('%.4f' % mean_results[2])
-    lines[alg_index][db_index+3]= str('%.4f' % mean_results[3])
-
-    print(lines)
-    writer = csv.writer(open(filename, 'w'))
-    writer.writerows(lines)
+    meansToCSV(name_alg, name_db, mean_results)

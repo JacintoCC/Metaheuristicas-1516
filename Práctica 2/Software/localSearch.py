@@ -2,11 +2,8 @@ import numpy as np
 from BasicFunctions import *
 
 # Algoritmo de búsqueda local que devuelve una selección de características
-def localSearch(train_data, train_categ):
+def localSearch(train_data, train_categ,solution):
     num_features = len(train_data[0])
-
-    # Partimos de un vector solución aleatorio
-    solution = np.random.random(size=num_features)<0.5
 
     # Partimos de la medida actual de acierto
     exists_profit = True
@@ -43,4 +40,4 @@ def localSearch(train_data, train_categ):
             i = (i+1)%num_features
 
 
-    return [solution, previous_profit]
+    return solution, previous_profit

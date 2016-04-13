@@ -8,8 +8,8 @@ def kNNSolution(train_data, train_categ):
     return [solution,rate_in]
 
 
-# Selección de la mejor característica
-def getBetterFeature(train_data, train_categ, solution):
+# Selección de una característica aleatoria con un umbral
+def getFeatureThreshold(train_data, train_categ, solution, tolerance):
     num_features = len(train_data[0])
 
     # Tomamos las características no seleccionadas
@@ -27,13 +27,20 @@ def getBetterFeature(train_data, train_categ, solution):
         # Desactivamos la característica activada
         solution[feat] = False
 
-    return [profit_v.max(),profit_v.argmax()]
+    # Filtramos aquellas que tengan un valor menor que el umbral
+    mu = profit_v.max() - tolerance*(profit_v.max()-profit_v.min())
+    lrc = [[i,profit_v[i]] for i in range(num_features) if profit_v[i]>=mu]
+    selected = np.random.randint(len(lrc))
+    return lrc[selected][0],lrc[selected][1]
 
 
 
 # Algoritmo greedy SFS que devuelve una selección de características
 def greedySFS(train_data, train_categ):
     num_features = len(train_data[0])
+
+    # tolerance para la selección de características
+    tolerance = 0.3
 
     # Partimos de un vector que no selecciona ninguna característica
     solution = np.zeros(num_features, bool)
@@ -42,10 +49,11 @@ def greedySFS(train_data, train_categ):
 
     while(exists_profit):
         #Comparamos el número de aciertos actual y el máximo hasta ahora.
-        current_profit, max_position = getBetterFeature(train_data, train_categ, solution)
+        max_position, current_profit = getFeatureThreshold(train_data, train_categ, solution,tolerance)
         exists_profit = current_profit > previous_profit
+
         if(exists_profit):
             solution[max_position] = True
             previous_profit = current_profit
 
-    return [solution, previous_profit]
+    return solution, previous_profit

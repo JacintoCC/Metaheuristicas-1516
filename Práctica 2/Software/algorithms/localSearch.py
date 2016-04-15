@@ -2,12 +2,12 @@ import numpy as np
 from BasicFunctions import *
 
 # Algoritmo de búsqueda local que devuelve una selección de características
-def localSearch(train_data, train_categ,solution):
+def localSearch(train_data, train_categ, scorer, solution):
     num_features = len(train_data[0])
 
     # Partimos de la medida actual de acierto
     exists_profit = True
-    previous_profit = getRateL1O(train_data[:,solution],train_categ)
+    previous_profit = scorer.scoreSolution(train_data[:,solution],train_categ)
 
     # Ponemos el contador de comprobaciones a 0
     num_checks = 0
@@ -21,10 +21,9 @@ def localSearch(train_data, train_categ,solution):
         while not exists_profit and i != last_neigh and num_checks<15000:
             # Cambiamos cada una de estas características y proyectamos
             flip(solution,i)
-            data_w_features = train_data[:,solution]
 
             # Medimos la tasa de acierto con este cambio
-            current_profit = getRateL1O(data_w_features,train_categ)
+            current_profit = scorer.scoreSolution(train_data[:,solution], train_categ)
             num_checks += 1
 
             # Si mejora la solución nos quedamos con este cambio

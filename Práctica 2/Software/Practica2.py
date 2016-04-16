@@ -17,7 +17,7 @@ from algorithms.grasp import grasp
 from algorithms.iteratedLocalSearch import iteratedLocalSearch
 
     # Importación de la clase para realizar el score de una solución
-# from knnGPU.knnLooGPU import knnLooGPU
+from knnGPU.knnLooGPU import knnLooGPU
 
     #Importación del generador de números aleatorios en C
 try:
@@ -41,7 +41,7 @@ def runAlgorithm(data, categories, function, random_generator,
     """
 
     # Creación de la tabla de resultados.
-    results_table = np.empty([iterations*num_partitions,4], dtype=float)
+    results_table = np.empty([iterations*num_partitions,4], dtype=np.float32)
 
     # Escalado de los datos.
     scaler = MinMaxScaler()
@@ -58,15 +58,15 @@ def runAlgorithm(data, categories, function, random_generator,
             print("Sub iteration ", j)
 
             training_data = np.array([partition[0][k][l] for k in range(num_partitions)
-                                  if k!=j for l in range(len(partition[0][k]))], float)
+                                  if k!=j for l in range(len(partition[0][k]))], np.float32)
             training_categ = np.array([partition[1][k][l] for k in range(num_partitions)
-                                          if k!=j for l in range(len(partition[1][k]))])
+                                          if k!=j for l in range(len(partition[1][k]))], np.int32)
 
-            test_data = partition[0][j]
-            test_categ = partition[1][j]
+            test_data = np.array(partition[0][j], np.float32)
+            test_categ = np.array(partition[1][j], np.int32)
 
             # Objeto Scorer que usa la GPU para reducir tiempos
-            #scorerGPU = knnLooGPU(len(training_data), len(training_data[0]), 3)
+            scorerGPU = knnLooGPU(len(training_data), len(test_data), len(training_data[0]), 3)
 
             # Inicio del contador
             start = time.time()
@@ -117,7 +117,7 @@ def main(args):
                    'G':grasp, 'I': iteratedLocalSearch}
     alg_names = {'K': "KNN", 'S': "SFS", 'B': "BMB", 'G':"GRASP", 'I': "ILS"}
     class_row = {'W': 0, 'L': 90, 'A':278}
-    bytes_to_int = {bB = 0, bM = 1}
+    bytes_to_int = {b'B': 0, b'M': 1}
 
     parser = argparse.ArgumentParser(description='')
     parser.add_argument('DB', choices=['W','L','A'],
@@ -142,18 +142,16 @@ def main(args):
     database_name += db_options[args.DB] + '.arff'
     database = arff.loadarff(database_name)[0]
 
-    if( args.DB = 'W'){
+    if( args.DB == 'W'):
         categories = np.array([bytes_to_int[row[class_row[args.DB]]] for row in database],
-                              dtype=int32)
-    }
-    else{
+                              dtype=np.int32)
+    else:
         categories = np.array([row[class_row[args.DB]] for row in database],
-                              dtype=int32)
-    }
+                              dtype=np.int32)
 
 
     data = np.array( [[row[j]   for j in range(len(database[0])) if j!=class_row[args.DB]]
-                                for row in database], dtype=float32)
+                                for row in database], dtype=np.float32)
 
     print("Seed = " + str(random_ppio.Get_random()))
 

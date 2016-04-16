@@ -89,6 +89,9 @@ class knnLooGPU:
         # Get the kernel function from the compiled module
         self.GPUscoreSolution = self.compiledCode.get_function("scoreSolution")
 
+        # Get the kernel function from the compiled module
+        self.GPUscoreOut = self.compiledCode.get_function("scoreOut")
+
     def scoreSolution(self, samples, target):
         """ Computes the mean ratio of success using K-NN and leave-one-out
 
@@ -191,7 +194,7 @@ class knnLooGPU:
         samplesGPU = gpuarray.to_gpu(samples.flatten())
         testGPU = gpuarray.to_gpu(test.flatten())
         target_trainingGPU = gpuarray.to_gpu(target_training)
-        target_testGPU = gpuarray.to_gpu(target_testGPU)
+        target_testGPU = gpuarray.to_gpu(target_test)
         resultsGPU = gpuarray.to_gpu(results)
 
         # Call the kernel on the card

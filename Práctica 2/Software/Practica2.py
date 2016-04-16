@@ -79,9 +79,8 @@ def runAlgorithm(data, categories, function, random_generator,
             end = time.time()
 
             # Evaluación en el conjunto de test.
-            nbrs =  neighbors.KNeighborsClassifier(3)
-            nbrs.fit(training_data[:,solution],training_categ)
-            rate = 100*nbrs.score(test_data[:,solution], test_categ)
+            rate = scorerGPU.scoreOut(training_data[:,solution], test_data[:,solution],
+                                      training_categ, test_categ)
 
             # Rellenamos la tabla con los resultados obtenidos
             row = i*num_partitions+j

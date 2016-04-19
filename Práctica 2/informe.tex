@@ -17,7 +17,7 @@
 \usepackage{float}
 \usepgfplotslibrary{colorbrewer}
 
-
+% Título y autor
 \author{Jacinto Carrasco Castillo 	\\
 		N.I.F. 32056356-Z			\\ 
 		\href{jacintocc@correo.ugr.es}{jacintocc@correo.ugr.es}}
@@ -26,6 +26,8 @@
 		Búsquedas multiarranque para el problema \\
 		de la selección de características}
 
+% Comando para mostrar una tabla de resultados.
+%    - El argumento se corresponde con la tabla
 \newcommand{\maketable}[1]{
 \begin{adjustwidth}{-1cm}{}
 \resizebox{\linewidth}{!}{
@@ -40,7 +42,8 @@
 		column type=c
 	},
 	every first column/.style={ column type/.add={|}{} },
-	every last row/.style={before row =\hline\hline, after row=\hline},
+	every last row/.style={ after row=\hline},
+	every row no 10/.style={before row=\hline\hline},
 	column type/.add={}{|},
 	columns/partition/.style={column name = , string type},
 	columns/in/.style={column name =\%Clas. in},
@@ -61,6 +64,13 @@
 \end{adjustwidth}
 }
 
+% Comando para formar una tabla que reúna en una tabla
+% los resultados de las tres BD.
+% Argumentos:
+%  - Tabla formada
+%  - Tabla WDBC
+%  - Tabla Libras
+%  - Tabla Arrhythmia
 \newcommand{\makeresume}[4]{
 \pgfplotstablevertcat{#1}{#2}
 \pgfplotstablecreatecol[copy column from table={#3}{in}]{inL} {#1}
@@ -73,6 +83,11 @@
 \pgfplotstablecreatecol[copy column from table={#4}{T}]{tA} {#1}
 }
 
+% Método para obtener un elemento de una tabla
+% Argumentos:
+%  - Tabla
+%  - Fila
+%  - Columna
 \newcommand{\getElement}[3]{\pgfplotstablegetelem{#2}{#3}\of{#1} \pgfplotsretval}
 
 
@@ -105,6 +120,8 @@
 
 \pgfplotstableread[col sep=comma]{Software/Resultados/results.csv}\dataGlobal
 
+
+% Portada y título
 \maketitle
 
 \begin{center}
@@ -127,15 +144,17 @@ Algoritmos considerados:
 
 \newpage
 
+
+% Índice
 \tableofcontents
 \newpage
 
 \section{Descripción del problema}
 
-El problema que nos ocupa es un problema de clasificación. Partimos de una muestra de los objetos que queremos clasificar y su clasificación, es decir, la clase a la que pertenece y pretendemos, en base a esta muestra, poder clasificar nuevas instancias que nos lleguen.\\
+El problema que nos ocupa es un problema de clasificación. Partimos de una muestra de los objetos que queremos clasificar y su etiqueta, es decir, la clase a la que pertenece y pretendemos, en base a esta muestra, poder clasificar nuevas instancias que nos lleguen.\\
 La clasificación se realizará en base a una serie de características, que nos permitan determinar si un individuo pertenece a un grupo u otro. Por tanto, tendremos individuos de una población $\Omega$ representados como un vector de características: $ \omega \in \Omega; \omega = (x_1(\omega), \dots x_n(\omega))$, donde $\omega$ es un individuo de la población y $x_i, i=1,\dots n$ son las $n$ características sobre las que se tiene información. Buscamos $f:\Omega \longrightarrow C=\{C_1, \dots, C_M\}$, donde $C=\{C_1, \dots, C_M\}$ es el conjunto de clases a las que podemos asignar los objetos.\\
-El problema de clasificación está relacionado con la separabilidad de las clases en el sentido de que existirá la función $f$  anteriormente mencionada siempre que las clases sean separables, es decir, siempre que un individuo con unas mismas características pertenzcan a una misma clase. Sin embargo, si se da que dos individuos $\omega_1, \omega_2 \in \Omega$, $(x_1(\omega_1), \dots x_n(\omega_1))=(x_1(\omega_2), \dots x_n(\omega_2))$ y sin embargo $f(\omega_1) \neq f(\omega_2)$, no podrá existir $f$. En todo caso, querríamos obtener la mayor tasa de acierto posible.\\  
-Por tanto, queremos, en base a unos datos, hallar la mejor $f$ posible. De esto trata el aprendizaje clasificado: Se conocen instancias de los datos y las clases a las que pertenecen. Usaremos como técnica de aprendizaje supervisado la técnica estadística conocida como $k$ vecinos más cercanos. Se trata de buscar los $k$ vecinos más cercanos y asignar al objeto la clase que predomine de entre los vecinos. En caso de empate, se seleccionará la clase con más votos más cercana.\\  
+El problema de clasificación está relacionado con la separabilidad de las clases en el sentido de que existirá la función $f$  anteriormente mencionada siempre que las clases sean separables, es decir, siempre que un individuo con unas mismas características pertenzcan a una misma clase. Sin embargo, si se diese que dos individuos $\omega_1, \omega_2 \in \Omega$, $(x_1(\omega_1), \dots, x_n(\omega_1))=(x_1(\omega_2), \dots, x_n(\omega_2))$ y sin embargo $f(\omega_1) \neq f(\omega_2)$, no podrá existir $f$. En todo caso, querríamos obtener la mayor tasa de acierto posible.\\  
+Por tanto, tratamos, en base a unos datos, hallar la mejor $f$ posible. De esto trata el aprendizaje supervisado: Se conocen instancias de los datos y las clases a las que pertenecen. Usaremos como técnica de aprendizaje supervisado la técnica estadística conocida como $k$ vecinos más cercanos. Se trata de buscar los $k$ vecinos más cercanos y asignar al objeto la clase que predomine de entre los vecinos. En caso de empate, se seleccionará la clase con más votos más cercana.\\  
 Pero no nos quedamos en el problema de clasificación, sino que buscamos reducir el número de características. Con esto pretendemos seleccionar las características que nos den un mejor resultado (por ser las más influyentes a la hora de decidir la categoría). Usaremos los datos de entrenamiento haciendo pruebas mediante diferentes metaheurísticas hasta obtener la mejor selección que seamos capaces de encontrar.\\  
 El interés en realizar la selección de características reside en que se aumentará la eficiencia, al requerir menos tiempo para construir el clasificador, y que se mejoran los resultados al descartar las características menos influyentes y que sólo aportan ruido. Esto hace también que se reduzcan los costes de mantenimiento y se aumente la interpretabilidad de los datos.\\
 Las funciones de evaluación pueden estar basadas en la consistencia, en la Teoría de la Información, en la distancia o en el rendimiento de clasificadores. Nosotros usaremos el rendimiento promedio de un clasificador $3-NN$.
@@ -146,38 +165,64 @@ Las funciones de evaluación pueden estar basadas en la consistencia, en la Teor
 	Para este problema tenemos varias formas posibles de representar las soluciones:
 	\begin{itemize}
 		\item Representación binaria: Cada solución está representada por un vector binario de longitud igual al número de características, donde las posiciones seleccionadas tendrán un 1 o $\texttt{True}$ y las no seleccionadas un 0 o $\texttt{False}$. Esta opción, que será la que tomaremos, sólo es recomendable si no tenemos restricciones sobre el número de características seleccionadas.
-		\item Representación entera: Cada solución es un vector de tamaño fijo $m \leq n$ con las características seleccionadas. Esta representación sí es adecuada si tenemos restricciones sobre el número de características tomadas ya que no podemos hacerlo con más de $m$.
+		\item Representación entera: Cada solución es un vector de tamaño fijo $m \leq n$ con las características seleccionadas. Esta representación sí es adecuada si tenemos restricciones sobre el número de características tomadas ya que no podemos hacerlo con más de $m$ características.
 		\item Representación de orden: Cada solución es una permutación de $n$ elementos, ordenados según la importancia de cada característica. Aquí también se maneja el cumplimiento de restricciones pues una vez encontrada la solución, tomaremos sólo las primeras $m$ características.
 	\end{itemize}
 	Se ha de mencionar que en las dos últimas representaciones el espacio de soluciones es mayor que el espacio de búsqueda, justificado en la representación de orden porque da más información (podríamos tomar soluciones de longitud variable), pero que en la representación entera sólo es razonable asumir si tenemos una restricción de longitud fija. Además, otra ventaja de la representación binaria es la facilidad para aplicarle operadores (de vecindario, en posteriores prácticas de cruce...) manteniendo la consistencia.
 
 \subsection{Función objetivo}
-	La función objetivo será el porcentaje de acierto en el conjunto de test para el clasificador $3-NN$ obtenido usando las distancias de los individuos $\omega$ en las dimensiones representadas por las características seleccionadas en el vector solución para el conjunto de entrenamiento. El objetivo será maximizar esta función. A la hora de buscar esta solución sólo estaremos manejando los datos de entrenamiento, luego aquí la función objetivo será la media de tasa de acierto para cada uno de los datos de entrenamiento con respecto a todos los demás, por lo que tenemos que usar la técnica de $\textit{Leave-One-Out}$. Esta técnica consiste en quitar del conjunto de datos cada uno de los elementos, comprobar el acierto o no para este dato en concreto, y devolverlo al conjunto de datos. Así evitamos que los resultados estén sesgados.
+	La función objetivo será el porcentaje de acierto en el conjunto de test para el clasificador $3-NN$ obtenido usando las distancias de los individuos $\omega$ en las dimensiones representadas por las características seleccionadas en el vector solución para el conjunto de entrenamiento. El objetivo será maximizar esta función. A la hora de buscar esta solución sólo estaremos manejando los datos de entrenamiento, luego aquí la función objetivo será la media de tasa de acierto para cada uno de los datos de entrenamiento con respecto a todos los demás, por lo que tenemos que usar la técnica de $\textit{Leave-One-Out}$. Esta técnica consiste en quitar del conjunto de datos cada uno de los elementos, comprobar el acierto o no para este dato en concreto, y devolverlo al conjunto de datos. Así evitamos que los resultados estén sesgados a favor de la clase o etiqueta original, al contar siempre con un voto la clase verdadera.\\
+	La implementación de la función objetivo (obtener el score para Test) la he realizado basándome en el código paralelizado realizado para CUDA por Alejandro García Montoro para la función de $\textit{Leave One Out}$. El pseudocódigo incluido se trata del esquema seguido para cada proceso, puesto que el método en $\texttt{Python}$ para pasarle a la GPU los datos de entrenamiento, test, categorías y un puntero con la solución no tiene mayor interés.
 	
 \begin{lstlisting}[mathescape=true]
-targetFunction(data_train, categories_train, data_test,
-				categories_test, solution):
+targetFunction(data_train, categories_train, 
+               data_test,  categories_test):
 BEGIN
-   num_items $\leftarrow$ length(data_test)
-   sum_score $\leftarrow$ 0
+   test $\leftarrow$ Num. Process
+   num_test $\leftarrow$ length(data_test)
+   
+   $\textbf{\texttt{exit}}$ if test > num_test
+   my_features $\leftarrow$ data_test[test]
+   
+   k_nearest $\leftarrow$ initialize3Neighbours
 	
-   data_train' $\leftarrow$ {$col_i$ from data_train if $solution_i$ is True}
-   classifier $\leftarrow$ Make3NNClasifier(data_train', categories_train)
-
-   data_test' $\leftarrow$ {$col_i$ from data_test if $solution_i$ is True}
-	
-   FOR item IN data_test'
-      predicted_class $\leftarrow$ classifier(item)
-      IF predicted_class == categories_test_item THEN
-         sum_score $\leftarrow$ sum_score + 1
+   FOR item IN data_train
+      distance $\leftarrow$ computeDistance(my_features, item)
+      k_nearest $\leftarrow$ update(item, distance)
    END
 	
-   RETURN sum_score / num_items * 100 
+   class $\leftarrow$ poll(classes of k_nearest)
+      
+   RETURN class == categories_test[test]
 END
 \end{lstlisting}
 
-	La función de evaluación incluida en el código no la he realizado yo sino que he utilizado el paquete $\texttt{sklearn}$ de $\texttt{Python}$ por razones de eficiencia. A lo largo de la práctica (en los métodos de búsqueda) haré referencia a una función $getValue(data, categories, solution)$ que representa la función de evaluación con la técnica del $\textit{Leave-One-Out}$ explicada anteriormente.
+	Esto en \texttt{CUDA} lo que hace es guardarnos, para cada proceso, si se ha acertado o no. Posteriormente se pasa el vector con cada resultado (cada ejecución de este código) de nuevo a $\texttt{Python}$ y se calcula el porcentaje de aciertos. Nótese que no se realiza la proyección por las características seleccionadas, esto lo hacemos al pasar los datos.\\
+	Para la función de evaluación de las posibles soluciones 	que se van generando durante la búsqueda utilizo el método realizado por Alejandro García Montoro para usar CUDA. El algoritmo es similar a éste, pero incluye \textit{Leave One Out}:
+
+\begin{lstlisting}[mathescape=true]
+targetFunctionLeaveOneOut(data_train, categories_train):
+BEGIN
+   sample $\leftarrow$ Num. Process
+   num_samples $\leftarrow$ length(data_train)
+   
+   $\textbf{\texttt{exit}}$ if sample > num_samples
+   my_features $\leftarrow$ data_train[sample]
+   
+   k_nearest $\leftarrow$ initialize3Neighbours
 	
+   FOR item IN data_train
+     if item $\neq$ sample
+      distance $\leftarrow$ computeDistance(my_features, item)
+      k_nearest $\leftarrow$ update(item, distance)
+   END
+	
+   class $\leftarrow$ poll(classes of k_nearest)
+      
+   RETURN class == categories_train[sample]
+END
+\end{lstlisting}
+
 \subsection{Operadores comunes}
 	Entenderemos como vecindario de una solución a los vectores que sólo difieren en una posición. Por tanto, el operador para movernos a una solución vecina consistirá en cambiar una posición determinada:
 \begin{lstlisting}[mathescape=true]
@@ -190,15 +235,121 @@ BEGIN
 END
 \end{lstlisting}
 	
+	
+En esta práctica también es común a todos los métodos el método de búsqueda local. Para favorecer la reducción de características, considero una mejor solución aquella que con la misma calidad en términos de porcentaje de aciertos, tenga un menor número de características seleccionadas. Esto nos permitirá posteriormente hacer un análisis sobre la reducción de características en el sentido de que sólo se llegará a reducir las características con los métodos con los que se llegue a buenas soluciones cuyos vecinos, si no son peores, al menos tienen menos características activadas.\\
+Como diferencia con respecto a la primera práctica, ahora la solución inicial es un parámetro y no se genera aleatoriamente dentro del método, ya que depende del algoritmo de búsqueda por trayectorias múltiples que usemos:
+
+	\begin{lstlisting}[mathescape=true]
+localSearch(data, categories, solution) BEGIN	
+   REPEAT
+      first_neig $\leftarrow$  random{1,..., num_features}
+      neighbours $\leftarrow$ {flip(solution,i): i=first_neig,...,first_neig-1}
+      found_better $\leftarrow$ FALSE
+		
+      FOR neig IN neighbours
+         IF neigh is better than solution THEN
+            found_better $\leftarrow$ TRUE
+            solution $\leftarrow$ neig
+            BREAK
+		
+         END
+   WHILE( found_better )
+	
+   return solution
+END
+	\end{lstlisting}
+	
+	Donde que el vecino sea mejor que la solución actual significa que tiene una mayor tasa de acierto en el conjunto de datos de entrenamiento, o que la tasa es la misma y tiene menos características seleccionadas.
 
 \section{Estructura del método de búsqueda}
 
 \subsection{Búsqueda multiarranque básica}
 
+Este método consiste en la realización de diferentes búsquedas locales que parten de soluciones aleatorias. Para ello, simplemente se lanzan, como se indica en el guión de prácticas, 25 búsquedas locales y devolvemos la mejor solución encontrada. El criterio para considerar que una solución es mejor que otra se basa, como dentro de la búsqueda local, en encontrar el vector de características que ofrezca una mejor tasa de acierto y, de entre ellas, la que tenga menos características seleccionadas. Los resultados esperados serán similares a las mejores ejecuciones del apartado de búsqueda local en la práctica anterior. Se podrá observar también si el hecho de incluir aceptar como mejores soluciones con igual tasa de acierto y menor número de características beneficia o perjudica a la tasa de acierto fuera de los datos de entrenamiento.
+
+	\begin{lstlisting}[mathescape=true]
+BMB(data, categories) BEGIN	
+   num_features $\leftarrow$ length ( data[0] )
+   best_solution $\leftarrow$ {F,...,F}
+   
+   FOR i = 1,...,25
+      solution $\leftarrow$ random({True,False},
+                                   size = num_features)
+                                   
+      solution $\leftarrow$ localSearch(data, categories, solution)
+      IF solution is better than best_solution THEN
+         best_solution $\leftarrow$ solution
+   END
+	
+   return best_solution
+END
+	\end{lstlisting}
 
 \subsection{GRASP}
 
-
+	El esquema general del algoritmo $\texttt{GRASP}$ es similar al de $\texttt{BMB}$, con la única salvedad de que la solución inicial para cada una de las iteraciones no es un vector aleatorio sino que se trata de una solución aportada por un algoritmo \textit{greedy}. Esto repercute en que es necesario un tiempo mayor de ejecución al ser más costoso lógicamente ejecutar el algoritmo \textit{greedy} que obtener una solución aleatoria. Sin embargo, este tiempo no se pierde en vano, pues resulta lógico pensar \textit{a priori} que si partimos de una buena solución y entonces aplicamos búsqueda local, se llegará a una solución mejor que partiendo de una aleatoria.
+	
+		\begin{lstlisting}[mathescape=true]
+GRASP(data, categories) BEGIN	
+   num_features $\leftarrow$ length ( data[0] )
+   best_solution $\leftarrow$ {F,...,F}
+   
+   FOR i = 1,...,25
+      solution $\leftarrow$ getGreedySolution(data, categories)
+                                   
+      solution $\leftarrow$ localSearch(data, categories, solution)
+      IF solution is better than best_solution THEN
+         best_solution $\leftarrow$ solution
+   END
+	
+   return best_solution
+END
+	\end{lstlisting}
+	
+	El interés de este método reside, pues en la obtención de la solución \textit{greedy}. Aquí también hay diferencias con respecto a la primera práctica. Ahora no se trata de ir seleccionando la mejor característica cada vez, sino de ir seleccionando una característica al azar de las que sobrepasen un umbral. Esto añade mayor variabilidad al espacio de búsqueda explorado, con lo que tenemos mayor probabilidad de encontrar una mejor solución. 
+	
+	
+	\begin{lstlisting}[mathescape=true]
+getGreedySolution(data, categories) BEGIN
+   current_solution $\leftarrow$ {0,...,0: size = num_features}
+   tolerance $\leftarrow$ 0.3
+   
+   REPEAT
+      char $\leftarrow$ getCharWithThreshold(data,categories,
+                                             solution,tolerance)
+      
+      IF flip(solution, char) is better than solution THEN
+         solution $\leftarrow$ flip(solution, char)
+   
+   WHILE flip(solution, char) is better than solution
+   
+   RETURN solution
+END
+	\end{lstlisting}
+	
+	Aún falta por comentar cómo se obtiene la característica con la que seleccionaremos una característica al azar de entre las que cumplan una cierta condición, que consiste en tener un porcentaje de acierto entre el máximo valor del vecindario y éste menos un $30\%$ de la diferencia entre él y el menor valor del vecindario. El porcentaje de la diferencia aceptada es lógicamente variable, con un valor cercano a $0\%$ se trataría del \textit{greedy} \texttt{SFS}, mientras que con un valor del $100\%$ se trata de una selección de un vecino aleatorio, y parando el algoritmo cuando seleccionásemos a un vecino peor que la solución actual.
+	
+	\begin{lstlisting}[mathescape=true]
+getCharWithThreshold(data, categories,solution,tolerance) BEGIN
+   values $\leftarrow$ vector( size = num_features )
+   FOR i IN {1,..., num_features}
+      
+      neig $\leftarrow$ neighbours[i]
+      values[i] $\leftarrow$ score(data, categories, neig)
+   
+   END
+   
+   max $\leftarrow$ max(values)
+   min $\leftarrow$ min(values)   
+   above_threshold $\leftarrow$ {i $\in$ {1,...,N: 
+                         values[i] > max - tolerance(max-min)}
+   char $\leftarrow$ random(above_threshold)
+   
+   RETURN char 
+END
+	\end{lstlisting}
+	
+	
 	
 \subsection{ILS}
 
@@ -206,7 +357,7 @@ END
 
 \section{Algoritmo de comparación}
 
-Como algoritmo de comparación tenemos el algoritmo $\textit{greedy}$ SFS. Partiendo de un vector con ninguna característica seleccionada, exploramos por el entorno y nos quedamos con el vecino que genera una mejor tasa de acierto. Repetimos este proceso hasta que ningún vecino aporta una mejora a la solución obtenida.
+Como algoritmo de comparación tenemos el algoritmo\textit{greedy} SFS. Partiendo de un vector con ninguna característica seleccionada, exploramos por el entorno y nos quedamos con el vecino que genera una mejor tasa de acierto. Repetimos este proceso hasta que ningún vecino aporta una mejora a la solución obtenida.
 
 	\begin{lstlisting}[mathescape=true]
 greedySFS(data, categories) BEGIN

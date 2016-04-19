@@ -42,7 +42,7 @@ def greedyRandom(train_data, train_categ, score):
     previous_profit = 0
 
     while(exists_profit):
-        #Comparamos el número de aciertos actual y el máximo hasta ahora.
+        #Comparamos el número de aciertos actual y el obtenido
         max_position, current_profit = getFeatureThreshold(train_data,
                                        train_categ, score, solution,tolerance)
         exists_profit = current_profit > previous_profit
@@ -60,7 +60,6 @@ def grasp(train_data, train_categ, score):
     best_value = 0
 
     for i in range(25):
-        print(i)
         # Partimos de un vector solución obtenido mediante greedy
         solution = greedyRandom(train_data, train_categ, score)[0]
 

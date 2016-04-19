@@ -22,15 +22,14 @@ def localSearch(train_data, train_categ, score, solution):
             # Cambiamos cada una de estas características y proyectamos
             flip(solution,i)
 
-            # print(train_data.dtype)
-            # print(train_data[:,solution].dtype)
-            # print(train_categ.dtype)
             # Medimos la tasa de acierto con este cambio
             current_profit = score(train_data[:,solution], train_categ)
             num_checks += 1
 
             # Si mejora la solución nos quedamos con este cambio
-            exists_profit = current_profit > previous_profit
+            exists_profit = current_profit > previous_profit or
+                            (current_profit == previous_profit and
+                             solution[i] )
 
             # Descambiamos la característica cambiada
             if not exists_profit:

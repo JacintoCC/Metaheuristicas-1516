@@ -28,8 +28,8 @@ def localSearch(train_data, train_categ, score, solution):
 
             # Si mejora la solución nos quedamos con este cambio
             exists_profit = current_profit > previous_profit or
-                            (current_profit == previous_profit and
-                             solution[i] )
+                            current_profit == previous_profit and
+                             solution[i]
 
             # Descambiamos la característica cambiada
             if not exists_profit:

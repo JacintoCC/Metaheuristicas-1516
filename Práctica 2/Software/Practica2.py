@@ -28,6 +28,7 @@ except ImportError:
 
 
 def runAlgorithm(data, categories, function, random_generator,
+                 alg_name, db_name, save,
                  iterations = 5, num_partitions = 2):
     """ Método para realizar las ejecuciones de un algoritmo
         Argumentos:
@@ -90,9 +91,14 @@ def runAlgorithm(data, categories, function, random_generator,
             results_table[row,3] = end-start
 
             # Mensaje para conocer el tiempo y acierto en ejecución
-            print("Rate = " + str(rate) + "\nTime = " + str(end-start) + " s")
+            print("BD = " + db_name  + "\nAlgorithm =" + alg_name +
+                  "\nRate = " + str(rate) + "\nTime = " + str(end-start) + " s")
 
-    return results_table
+            if save:
+                resultsToCSV(alg_name, db_name, results)
+
+    print("BD = " + db_name  + "\nAlgorithm =" + alg_name)
+    print(results)
 
 
 def main(args):
@@ -156,13 +162,9 @@ def main(args):
     print("Seed = " + str(random_ppio.Get_random()))
 
     # Ejecutamos el algoritmo seleccionado sobre la base de datos
-    results = runAlgorithm(data, categories, alg_options[args.a], random_ppio)
-
-    # Mostramos por pantalla o guardamos en un fichero
-    if(args.write):
-        resultsToCSV(alg_names[args.a], args.DB.lower(),results)
-    else:
-        print(results)
+    runAlgorithm(data, categories, alg_options[args.a], random_ppio,
+                 alg_name = alg_names[args.a], db_name = args.DB.lower(),
+                 save = args.write)
 
 if __name__=="__main__":
     main(sys.argv)

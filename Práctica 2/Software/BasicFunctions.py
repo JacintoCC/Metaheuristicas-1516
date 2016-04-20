@@ -94,7 +94,7 @@ def meansToCSV(name_alg, name_db, mean_results):
     lines[alg_index][db_index+1]= str('%.4f' % mean_results[1])
     lines[alg_index][db_index+2]= str('%.4f' % mean_results[2])
     lines[alg_index][db_index+3]= str('%.4f' % mean_results[3])
-    
+
     writer = csv.writer(open(filename, 'w'))
     writer.writerows(lines)
 
@@ -111,7 +111,7 @@ def  resultsToCSV(name_alg, name_db, results):
 
     mean_results = np.mean(results, axis=0)
     max_results = results.max(axis=0)
-    min_results = results.max(axis=0)
+    min_results = results.min(axis=0)
     std_results = np.std(results, axis=0)
     f.write('Media, ' + str('%.4f' % mean_results[0]) + ', ' + str('%.4f' % mean_results[1]) + ', ' + str('%.4f' % mean_results[2]) + ', ' + str('%.4f' % mean_results[3]) + '\n')
     f.write('Max, ' + str('%.4f' % max_results[0]) + ', ' + str('%.4f' % max_results[1]) + ', ' + str('%.4f' % max_results[2]) + ', ' + str('%.4f' % max_results[3]) + '\n')

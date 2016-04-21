@@ -30,7 +30,7 @@ database_name = 'Datos/'
 db_options = {'W': 'wdbc', 'L': 'movement_libras', 'A':'arrhythmia'}
 alg_options = {'K': kNNSolution, 'G': greedySFS, 'L': localSearch, 'S':simAnnealing, 'T': tabuSearch, 'E': extendedTabuSearch}
 alg_names = {'K': "KNN", 'G': "SFS", 'L': "LS", 'S':"SA", 'T': "TS", 'E': "ETS"}
-class_row = {'W': 0, 'L': 90, 'A':278}
+class_row = {'W': 0, 'L': 90, 'A':253}
 
 parser = argparse.ArgumentParser(description='')
 parser.add_argument('DB', choices=['W','L','A'],
@@ -94,7 +94,7 @@ def runAlgorithm(data, categories, function, iterations = 5, num_partitions = 2)
     return results_table
 
 def  resultsToCSV(name_alg, name_db, results):
-    f = open('name_db+name_alg+'.csv','w')
+    f = open('name_db'+'name_alg'+'.csv','w')
     f.write("partition,in,out,red,T\n")
 
     for i in range(len(results)):

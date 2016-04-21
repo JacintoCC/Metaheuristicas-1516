@@ -122,7 +122,7 @@ def main(args):
     alg_options = {'K': kNNSolution, 'S': greedySFS, 'B': basicMultibootSearch,
                    'G':grasp, 'I': iteratedLocalSearch}
     alg_names = {'K': "KNN", 'S': "SFS", 'B': "BMB", 'G':"GRASP", 'I': "ILS"}
-    class_row = {'W': 0, 'L': 90, 'A':278}
+    class_row = {'W': 0, 'L': 90, 'A':253}
     bytes_to_int = {b'B': 0, b'M': 1}
 
     parser = argparse.ArgumentParser(description='')

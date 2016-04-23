@@ -19,6 +19,7 @@ def iteratedLocalSearch(train_data, train_categ, scorer):
     best_value = 0
 
     for i in range(25):
+        print("Vuelta " + str(i))
         solution, value_solution = localSearch(train_data, train_categ,
                                                scorer, solution)
 

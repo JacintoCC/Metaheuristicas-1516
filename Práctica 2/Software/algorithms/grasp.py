@@ -60,6 +60,7 @@ def grasp(train_data, train_categ, score):
     best_value = 0
 
     for i in range(25):
+        print("Vuelta " + str(i))
         # Partimos de un vector solución obtenido mediante greedy
         solution = greedyRandom(train_data, train_categ, score)[0]
 

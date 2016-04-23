@@ -42,7 +42,7 @@ def runAlgorithm(data, categories, function, random_generator,
     """
 
     # Creación de la tabla de resultados.
-    results_table = np.empty([iterations*num_partitions,4], dtype=np.float32)
+    results_table = np.zeros((iterations*num_partitions,4), dtype=np.float32)
 
     # Escalado de los datos.
     scaler = MinMaxScaler()
@@ -95,10 +95,10 @@ def runAlgorithm(data, categories, function, random_generator,
                   "\nRate = " + str(rate) + "\nTime = " + str(end-start) + " s")
 
             if save:
-                resultsToCSV(alg_name, db_name, results)
+                resultsToCSV(alg_name, db_name, results_table)
 
     print("BD = " + db_name  + "\nAlgorithm =" + alg_name)
-    print(results)
+    print(results_table)
 
 
 def main(args):

@@ -23,8 +23,8 @@
 		N.I.F. 32056356-Z			\\ 
 		\href{jacintocc@correo.ugr.es}{jacintocc@correo.ugr.es}}
 		
-\title{	Práctica 2 Metaheurísticas.\\
-		Búsquedas multiarranque para el problema \\
+\title{	Práctica 3 Metaheurísticas.\\
+		Algoritmos Genéticos para el problema \\
 		de la selección de características}
 
 % Comando para mostrar una tabla de resultados.
@@ -104,20 +104,16 @@
 \pgfplotstableread[col sep=comma]{Software/Resultados/lSFS.csv}\datalSFS
 \pgfplotstableread[col sep=comma]{Software/Resultados/aSFS.csv}\dataaSFS
 
-% Tablas BMB
-\pgfplotstableread[col sep=comma]{Software/Resultados/wBMB.csv}\datawBMB
-\pgfplotstableread[col sep=comma]{Software/Resultados/lBMB.csv}\datalBMB
-\pgfplotstableread[col sep=comma]{Software/Resultados/aBMB.csv}\dataaBMB
+% Tablas AGE
+\pgfplotstableread[col sep=comma]{Software/Resultados/wAGG.csv}\datawAGG
+\pgfplotstableread[col sep=comma]{Software/Resultados/lAGG.csv}\datalAGG
+\pgfplotstableread[col sep=comma]{Software/Resultados/aAGG.csv}\dataaAGG
 
-% Tablas GRASP
-\pgfplotstableread[col sep=comma]{Software/Resultados/wGRASP.csv}\datawGRASP
-\pgfplotstableread[col sep=comma]{Software/Resultados/lGRASP.csv}\datalGRASP
-\pgfplotstableread[col sep=comma]{Software/Resultados/aGRASP.csv}\dataaGRASP
+% Tablas AGE
+\pgfplotstableread[col sep=comma]{Software/Resultados/wAGE.csv}\datawAGE
+\pgfplotstableread[col sep=comma]{Software/Resultados/lAGE.csv}\datalAGE
+\pgfplotstableread[col sep=comma]{Software/Resultados/aAGE.csv}\dataaAGE
 
-% Tablas ILS
-\pgfplotstableread[col sep=comma]{Software/Resultados/wILS.csv}\datawILS
-\pgfplotstableread[col sep=comma]{Software/Resultados/lILS.csv}\datalILS
-\pgfplotstableread[col sep=comma]{Software/Resultados/aILS.csv}\dataaILS
 
 % Tabla Resumen
 \pgfplotstableread[col sep=comma]{Software/Resultados/results.csv}\dataGlobal
@@ -139,9 +135,8 @@ Quinto curso del Doble Grado en Ingeniería Informática y Matemáticas.\\
 
 Algoritmos considerados:
 \begin{enumerate}
-\item Búsqueda Multiarranque Básica
-\item GRASP
-\item ILS
+\item Algoritmo Genético Generacional
+\item Algoritmo Genético Estacionario
 \end{enumerate}
 
 \newpage
@@ -266,113 +261,11 @@ END
 
 \section{Estructura del método de búsqueda}
 
-\subsection{Búsqueda multiarranque básica}
+\subsection{Algoritmo Genético Generacional}
 
-Este método consiste en la realización de diferentes búsquedas locales que parten de soluciones aleatorias. Para ello, simplemente se lanzan, como se indica en el guión de prácticas, 25 búsquedas locales y devolvemos la mejor solución encontrada. El criterio para considerar que una solución es mejor que otra se basa, como se ha dicho previamente, en encontrar el vector de características que ofrezca una mejor tasa de acierto y, de entre ellas, la que tenga menos características seleccionadas. Los resultados esperados serán similares a las mejores ejecuciones del apartado de búsqueda local en la práctica anterior. Se podrá observar también si el hecho de incluir aceptar como mejores soluciones con igual tasa de acierto y menor número de características beneficia o perjudica a la tasa de acierto fuera de los datos de entrenamiento.
 
-	\newpage \begin{lstlisting}[mathescape=true]
-BMB(data, categories) BEGIN	
-   num_features $\leftarrow$ length ( data[0] )
-   best_solution $\leftarrow$ {F,...,F: size = num_features}
-   
-   FOR i = 1,...,25
-      solution $\leftarrow$ random({True,False}, size = num_features)
-                                   
-      solution $\leftarrow$ localSearch(data, categories, solution)
-      IF solution is better than best_solution THEN
-         best_solution $\leftarrow$ solution
-   END
-	
-   return best_solution
-END
-	\end{lstlisting}
+\subsection{Algoritmo Genético Estacionario}
 
-\subsection{GRASP}
-
-	El esquema general del algoritmo $\texttt{GRASP}$ es similar al de $\texttt{BMB}$, con la única salvedad de que la solución inicial para cada una de las iteraciones no es un vector aleatorio sino que se trata de una solución aportada por un algoritmo \textit{greedy}. Esto repercute en que es necesario un tiempo mayor de ejecución al ser más costoso lógicamente ejecutar el algoritmo \textit{greedy} que obtener una solución aleatoria. Sin embargo, este tiempo no se pierde en vano, pues resulta lógico pensar \textit{a priori} que si partimos de una buena solución y entonces aplicamos búsqueda local, se llegará a una solución mejor que partiendo de una aleatoria.
-	
-		\begin{lstlisting}[mathescape=true]
-GRASP(data, categories) BEGIN	
-   num_features $\leftarrow$ length ( data[0] )
-   best_solution $\leftarrow$ {F,...,F: size = num_features}
-   
-   FOR i = 1,...,25
-      solution $\leftarrow$ getGreedySolution(data, categories)
-                                   
-      solution $\leftarrow$ localSearch(data, categories, solution)
-      IF solution is better than best_solution THEN
-         best_solution $\leftarrow$ solution
-   END
-	
-   return best_solution
-END
-	\end{lstlisting}
-	
-	El interés de este método reside, pues, en la obtención de la solución \textit{greedy}. Aquí también hay diferencias con respecto a la primera práctica. Ahora no se trata de ir seleccionando la mejor característica cada vez, sino de ir seleccionando una característica al azar de las que sobrepasen un umbral. Esto añade mayor variabilidad al espacio de búsqueda explorado, con lo que tenemos mayor probabilidad de encontrar una mejor solución. 
-	
-	
-	\begin{lstlisting}[mathescape=true]
-getGreedySolution(data, categories) BEGIN
-   solution $\leftarrow$ {F,...,F: size = num_features}
-   tolerance $\leftarrow$ 0.3
-   
-   REPEAT
-      char $\leftarrow$ getCharWithThreshold(data,categories,
-                                   solution,tolerance)
-      
-      IF flip(solution, char) is better than solution THEN
-         solution $\leftarrow$ flip(solution, char)
-   
-   WHILE flip(solution, char) is better than solution
-   
-   RETURN solution
-END
-	\end{lstlisting}
-	
-	Aún falta por comentar cómo se obtiene la característica con la que seleccionaremos una característica al azar de entre las que cumplan una cierta condición, que consiste en tener un porcentaje de acierto entre el máximo valor del vecindario y éste menos un $30\%$ de la diferencia entre él y el menor valor del vecindario. El porcentaje de la diferencia aceptada es lógicamente variable, con un valor cercano a $0\%$ se trataría del \textit{greedy} \texttt{SFS}, mientras que con un valor del $100\%$ se trata de una selección de un vecino aleatorio, y parando el algoritmo cuando seleccionásemos a un vecino peor que la solución actual.
-	
-	\begin{lstlisting}[mathescape=true]
-getCharWithThreshold(data, categories,solution,tolerance) BEGIN
-   values $\leftarrow$ vector( size = num_features )
-   FOR i = 1,..., num_features
-      
-      neig $\leftarrow$ neighbours[i]
-      values[i] $\leftarrow$ score(data, categories, neig)
-   
-   END
-   
-   max $\leftarrow$ max(values)
-   min $\leftarrow$ min(values)   
-   above_threshold $\leftarrow$ {i $\in$ {1,...,N: 
-                         values[i] > max - tolerance(max-min)}
-   char $\leftarrow$ random(above_threshold)
-   
-   RETURN char 
-END
-	\end{lstlisting}
-	
-	
-	
-\subsection{ILS}
-
-	Para la búsqueda local iterada, se trata también de realizar 25 iteraciones al igual que en los métodos anteriores. La diferencia ahora está en la solución con la que se parte en cada iteración. En la primera iteración se parte de una solución aleatoria. Para las demás, se parte de una mutación de la mejor solución encontrada hasta el momento. Las mutaciones consisten en cambiar el valor situado en un tanto por ciento de las características, seleccionando aleatoriamente las características a cambiar.
-
-	\begin{lstlisting}[mathescape=true]
-ILS(data, categories) BEGIN	
-   num_features $\leftarrow$ length ( data[0] )
-   best_solution $\leftarrow$ {F,...,F: size = num_features}
-   solution $\leftarrow$ random({True,False}, size = num_features)
-   
-   FOR i = 1,...,25
-      IF solution is better than best_solution THEN
-         best_solution $\leftarrow$ solution
-         
-      solution $\leftarrow$ mutateSolution(best_solution)      
-   END
-	
-   return best_solution
-END
-	\end{lstlisting}
 	
 \section{Algoritmo de comparación}
 
@@ -417,20 +310,20 @@ La salida de cada ejecución (10 iteraciones de un algoritmo con una base de dat
 Los parámetros que acepta el programa son:
 \begin{itemize}
 \item Base de datos: Será una letra $\texttt{W,L,A}$ que representa cada una de las bases de datos a utilizar. Este parámetro es el único obligatorio.
-\item Algoritmo utilizado: Por defecto es el KNN. Para introducir uno distinto, se usa $\texttt{-a}$ seguido de una letra entre \texttt{K,S,B,G,I} que se corresponden con KNN, \textit{greedy} SFS, búsqueda multiarranque básica, \textit{GRASP} e \textit{iterated local search}, respectivamente.
+\item Algoritmo utilizado: Por defecto es el KNN. Para introducir uno distinto, se usa $\texttt{-a}$ seguido de una letra entre \texttt{K,S,G,E} que se corresponden con KNN, \textit{greedy} SFS, algoritmo genético generacional y algoritmo genético estacionario, respectivamente.
 \item Semilla. Para incluir una semilla, se añade $\texttt{-seed}$ seguido del número que usaremos como semilla. Por defecto es 3141592.
 \item Salida por pantalla o a fichero. Se utiliza con el parámetro opcional \texttt{-write} para escribir en un fichero en una carpeta llamada \texttt{Resultados}. El nombre del fichero será la primera letra de la base de datos utilizada seguida por las iniciales del algoritmo. Incluye también la media, el mínimo, el máximo y la desviación típica para cada columna.
 \item \texttt{-h} o \texttt{--help} para mostrar la ayuda y cómo se introducen los parámetros.
 \end{itemize}
 
 Por tanto, la ejecución del programa se hará de la siguiente manera:
-\[ \texttt{python Practica2.py base\_de\_datos [-a algoritmo -seed semilla -write T/F ]} \]
-Si por ejemplo queremos lanzar la base de datos de \texttt{WDBC} con GRASP, semilla 123456 y que los resultados se muestren por pantalla, escribimos
-\[ \texttt{python Practica2.py W -a G -seed 123456}\]
-Si optamos por la base de datos \texttt{Arrhythmia} con la búsqueda multiarranque básica y guardar el resultado en un fichero:
-\[ \texttt{python Practica2.py A -a B -write True}\]
+\[ \texttt{python Practica3.py base\_de\_datos [-a algoritmo -seed semilla -write T/F ]} \]
+Si por ejemplo queremos lanzar la base de datos de \texttt{WDBC} con el AGE, semilla 123456 y que los resultados se muestren por pantalla, escribimos
+\[ \texttt{python Practica3.py W -a E -seed 123456}\]
+Si optamos por la base de datos \texttt{Arrhythmia} con el AGG y guardar el resultado en un fichero:
+\[ \texttt{python Practica3.py A -a G -write True}\]
 Para mostrar la introducción de parámetros:
-\[ \texttt{python Practica2.py --help}\]
+\[ \texttt{python Practica3.py --help}\]
 
 \section{Experimentos y análisis de resultados}
 
@@ -453,8 +346,7 @@ Los casos del problema planteados son tres, cada uno de ellos asociado a una bas
 % Salida por pantalla
 \maketable{\dataKNN}
 
-
-En este caso el análisis es realmente el mismo que el de la primera práctica. Con el \texttt{KNN} se ve cómo es la BD en general y qué tasas de acierto se obtiene seleccionando todas las categorías. Las diferentes iteraciones y sus resultados no son más que para particiones distintas, pues la solución es la misma para todas las ejecuciones del algoritmo. Se ve que en \texttt{WDBC} y \texttt{Arrhythmia} se obtienen porcentajes similares para la clasificación dentro de la muestra y fuera, como cabría esperar, pues las particiones se hacen equilibradamente, y sin embargo en \texttt{Libras} el porcentaje de acierto fuera de la muestra es superior. Esto se puede deber a que hay un gran número de clases y no tantos representantes de esas clases como en las dos primeras bases de datos.
+Los datos y su análisis son los mismos que en la práctica anterior.
 
 \subsubsection{SFS}
 
@@ -464,35 +356,23 @@ En este caso el análisis es realmente el mismo que el de la primera práctica. 
 % Salida por pantalla
 \maketable{\dataSFS}
 
-Para el algoritmo \texttt{SFS} también se realizó el análisis en la práctica anterior, lo que nos permite comparar los tiempos entre haber usado el módulo de \texttt{scikit} y la paralelización realizada en esta práctica, siendo ahora en media más de 150 veces más rápido, para la base de datos de \texttt{Arrhythmia}, en otras BD y algoritmos la diferencia de tiempos puede seguir otra proporción.
+Los datos y su análisis son los mismos que en la práctica anterior.
 
-\subsubsection{Búsqueda multiarranque básica}
-% Tablas Resumen LS
-\makeresume{\dataBMB}{\datawBMB}{\datalBMB}{\dataaBMB}
-
-% Salida por pantalla
-\maketable{\dataBMB}
-
-En la búsqueda multiarranque básica vemos cómo llegamos a valores de la tasa de acierto (en especial dentro de la muestra) a las que no llegamos en la práctica anterior. Si observamos los resultados de la búsqueda local de la práctica anterior se comprueba que las mayores tasas de clasificación de entrenamiento de entre las diferentes particiones son similares a la media de las tasas obtenidas ahora. Y es que (aún siendo distintas particiones) si en la práctica anterior se realizaron 10 búsquedas locales por BD, ahora estamos haciendo 25 por partición. 
-
-
-\subsubsection{GRASP}
-% Tablas Resumen SA
-\makeresume{\dataGRASP}{\datawGRASP}{\datalGRASP}{\dataaGRASP}
+\subsubsection{Algoritmo genético generacional}
+% Tablas Resumen AGG
+\makeresume{\dataAGG}{\datawAGG}{\datalAGG}{\dataaAGG}
 
 % Salida por pantalla
-\maketable{\dataGRASP}
+\maketable{\dataAGG}
 
-De los resultados de GRASP, teniendo en cuenta que parte de una solución \textit{greedy}, llama la atención la poca reducción de las características en \texttt{WDBC}, aunque si vemos que la tasa de acierto con el \texttt{KNN} es tan alta, ha podido ir tomando características de una en una de aquellas mejores que un umbral obteniendo siempre mejores resultados. En cambio para \texttt{Arrhythmia}, la reducción sí es mayor, fruto de que haya tantas características y no todas tengan realmente influencia. 
 
-\subsubsection{ILS}
-% Tablas Resumen TS
-\makeresume{\dataILS}{\datawILS}{\datalILS}{\dataaILS}
+\subsubsection{Algoritmo genético generacional}
+% Tablas Resumen AGE
+\makeresume{\dataAGE}{\datawAGE}{\datalAGE}{\dataaAGE}
 
 % Salida por pantalla
-\maketable{\dataILS}
+\maketable{\dataAGE}
 
-En \texttt{ILS} vemos que se obtienen resultados similares a los de \texttt{BMB}, sólo un poco mejores. Esto se traduce en que pese a disponer un algoritmo simple para explorar vecindarios mayores a los considerados hasta ahora, el resultado está mejor dirigido que generar soluciones completamente aleatorias y aplicar búsqueda local. 
 
 \subsubsection{Comparación}
  
@@ -537,7 +417,7 @@ En \texttt{ILS} vemos que se obtienen resultados similares a los de \texttt{BMB}
 \begin{tikzpicture}
 \begin{axis}[
     ybar,
-    x=2.1cm,
+    x=2.5cm,
     xtick=data,% crucial line for the xticklabels directive
     ylabel=Tasa IN,
     ymin = 50,
@@ -563,16 +443,13 @@ En \texttt{ILS} vemos que se obtienen resultados similares a los de \texttt{BMB}
 \end{axis}
 \end{tikzpicture}
 \end{center}
-
-En la tasa de acierto en la muestra de entrenamiento se aprecia una mejora en general de los algoritmos de esta práctica con respecto a los algoritmos de comparación (sólo en \texttt{Arrhythmia} \texttt{SFS} consigue una mejora con respecto a \texttt{BMB} e \texttt{ILS}). La mejor tasa de acierto se obtiene en \texttt{WDBC} y \texttt{Libras} con \texttt{ILS}, sin embargo en término medio el mejor es \texttt{GRASP}, pues para \texttt{Arrhytmia} obtiene unos resultados mejores sí con una cierta distancia y sin embargo, en las otras dos BD los resultados son sólo un poco peores. El mejor desempeño en esta base de datos se puede deber a que el número de características es mayor, con lo que resulta efectivo partir de la solución sin características seleccionadas y encontrar máximos locales, que serán soluciones donde sólo cuenten las características más relevantes.\\
-\texttt{BMB} queda entonces como el algoritmo menos efectivo, pues, al encontrar óptimos locales en cada una de las veinticinco iteraciones desestima seguir buscando por el entorno de ese óptimo local y pega un salto. Sería interesante combinar \texttt{BMB} e \texttt{ILS}, realizando por ejemplo 5 búsquedas locales realizadas a partir de soluciones aleatorias, y por cada trayectoria, lanzar 5 búsquedas mutando la mejor solución encontrada en cada trayectoria.
  
 \subsubsection{Tasa Out}
 \begin{center}
 \begin{tikzpicture}
 \begin{axis}[
     ybar,
-    x=2.1cm,
+    x=2.5cm,
     xtick=data,% crucial line for the xticklabels directive
     ylabel=Tasa OUT,
     ymin = 40,
@@ -598,14 +475,13 @@ En la tasa de acierto en la muestra de entrenamiento se aprecia una mejora en ge
 \end{tikzpicture}
 \end{center}
 
-En la tasa de acierto en los datos de test resulta que considerar todas las características tiene un buen valor para \texttt{WDBC} y \texttt{Libras}. Sin embargo no consideraríamos esta opción en una situación real pues no estaríamos reduciendo el número de características, y como se observa en \texttt{Arrhythmia}, una base de datos con mayor número de clases y características, los resultados son bastante peores. De entre los demás algoritmos, es de nuevo \texttt{GRASP} el que obtiene los mejores resultados en término medio para las tres bases de datos, destacando especialmente en \texttt{Arrhythmia}.
 
 \subsubsection{Tasa reducción}
 \begin{center}
 \begin{tikzpicture}
 \begin{axis}[
     ybar,
-    x=2.1cm,
+    x=2.5cm,
     xtick=data,% crucial line for the xticklabels directive
     ylabel=Tasa red.,
     ymin = 0,
@@ -630,8 +506,6 @@ En la tasa de acierto en los datos de test resulta que considerar todas las cara
 \end{axis}
 \end{tikzpicture}
 \end{center}
-
-Con la tasa de reducción se puede entender mejor la tasa de acierto. Se observa que en \texttt{Arrhythmia} se obtiene una mayor tasa de acierto en los datos de test a mayor tasa de reducción y en cambio para \texttt{WDBC} a menor tasa de reducción mayor acierto fuera de la muestra. Es relevante la tasa de reducción en \texttt{Arrhythmia} en \texttt{GRASP} debido a que los otros algoritmos empezaron con una solución aleatoria y se han quedado en óptimos locales que tenían en torno a un 50$\%$ de reducción y en cambio \texttt{GRASP}, empezando sin ninguna característica, ha parado antes obteniendo mejores resultados. Para las otras bases de datos este algoritmo también ha llegado a valores cercanos a los de los otros algoritmos, con lo que se deduce que es una buena estrategia de búsqueda. 
 
 \subsubsection{Tiempos}
 
@@ -661,14 +535,11 @@ Con la tasa de reducción se puede entender mejor la tasa de acierto. Se observa
 	table [x=DB, y=2]	{\dataTimes};
 \addplot[sharp plot,red] 
 	table [x=DB, y=3]	{\dataTimes};
-\addplot[sharp plot,yellow] 
-	table [x=DB, y=4]	{\dataTimes};
-\legend{KNN,SFS,BMB,GRASP,ILS}
+\legend{KNN,SFS,AGG,AGE}
 \end{axis}
 \end{tikzpicture}
 \end{center}
 
-Observamos en la gráfica de tiempos que los tiempos son similares en los tres algoritmos de esta práctica para las dos primeras bases de datos, con \texttt{GRASP} un poco más lento. En cambio, \texttt{GRASP} es con diferencia es más rápido en \texttt{Arrhythmia} al quedarse con una buena solución muy pronto (alta tasa de reducción de características). También hay que destacar que, teniendo mejores resultados, \texttt{ILS} es más rápido que \texttt{BMB}, pues con cada mutación nos quedamos más cerca del óptimo que generando una solución aleatoria.
 
 \section{Bibliografía}
 \begin{itemize}

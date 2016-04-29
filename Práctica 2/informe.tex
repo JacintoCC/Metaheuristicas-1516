@@ -401,7 +401,6 @@ END
 \section{Procedimiento para desarrollar la práctica}
 
 El código de la práctica está realizado en $\texttt{Python 3.5.1}$ y en \texttt{CUDA}. Como se ha comentado anteriormente, el código para el KNN está paralelizado usando el código de Alejandro García Montoro para usarlo con \textit{leave-one-out} y añadiéndole un método para usarlo como función de evaluación de la solución obtenida para el conjunto de test. Esto ha permitido reducir los tiempos considerablemente.\\
-
 Los paquetes utilizados son:
 \begin{enumerate}
 	\item \texttt{scipy} para leer de una manera sencilla la base de datos.
@@ -534,9 +533,11 @@ En \texttt{ILS} vemos que se obtienen resultados similares a los de \texttt{BMB}
 \subsection{Análisis de los resultados}
 
 \subsubsection{Tasa In}
+\begin{center}
 \begin{tikzpicture}
 \begin{axis}[
     ybar,
+    x=2.1cm,
     xtick=data,% crucial line for the xticklabels directive
     ylabel=Tasa IN,
     ymin = 50,
@@ -561,11 +562,17 @@ En \texttt{ILS} vemos que se obtienen resultados similares a los de \texttt{BMB}
 \legend{WDBC,Libras,Arrhythmia}
 \end{axis}
 \end{tikzpicture}
+\end{center}
 
+En la tasa de acierto en la muestra de entrenamiento se aprecia una mejora en general de los algoritmos de esta práctica con respecto a los algoritmos de comparación (sólo en \texttt{Arrhythmia} \texttt{SFS} consigue una mejora con respecto a \texttt{BMB} e \texttt{ILS}). La mejor tasa de acierto se obtiene en \texttt{WDBC} y \texttt{Libras} con \texttt{ILS}, sin embargo en término medio el mejor es \texttt{GRASP}, pues para \texttt{Arrhytmia} obtiene unos resultados mejores sí con una cierta distancia y sin embargo, en las otras dos BD los resultados son sólo un poco peores. El mejor desempeño en esta base de datos se puede deber a que el número de características es mayor, con lo que resulta efectivo partir de la solución sin características seleccionadas y encontrar máximos locales, que serán soluciones donde sólo cuenten las características más relevantes.\\
+\texttt{BMB} queda entonces como el algoritmo menos efectivo, pues, al encontrar óptimos locales en cada una de las veinticinco iteraciones desestima seguir buscando por el entorno de ese óptimo local y pega un salto. Sería interesante combinar \texttt{BMB} e \texttt{ILS}, realizando por ejemplo 5 búsquedas locales realizadas a partir de soluciones aleatorias, y por cada trayectoria, lanzar 5 búsquedas mutando la mejor solución encontrada en cada trayectoria.
+ 
 \subsubsection{Tasa Out}
+\begin{center}
 \begin{tikzpicture}
 \begin{axis}[
     ybar,
+    x=2.1cm,
     xtick=data,% crucial line for the xticklabels directive
     ylabel=Tasa OUT,
     ymin = 40,
@@ -589,12 +596,16 @@ En \texttt{ILS} vemos que se obtienen resultados similares a los de \texttt{BMB}
 \legend{WDBC,Libras,Arrhythmia}
 \end{axis}
 \end{tikzpicture}
+\end{center}
 
+En la tasa de acierto en los datos de test resulta que considerar todas las características tiene un buen valor para \texttt{WDBC} y \texttt{Libras}. Sin embargo no consideraríamos esta opción en una situación real pues no estaríamos reduciendo el número de características, y como se observa en \texttt{Arrhythmia}, una base de datos con mayor número de clases y características, los resultados son bastante peores. De entre los demás algoritmos, es de nuevo \texttt{GRASP} el que obtiene los mejores resultados en término medio para las tres bases de datos, destacando especialmente en \texttt{Arrhythmia}.
 
 \subsubsection{Tasa reducción}
+\begin{center}
 \begin{tikzpicture}
 \begin{axis}[
     ybar,
+    x=2.1cm,
     xtick=data,% crucial line for the xticklabels directive
     ylabel=Tasa red.,
     ymin = 0,
@@ -618,12 +629,20 @@ En \texttt{ILS} vemos que se obtienen resultados similares a los de \texttt{BMB}
 \legend{WDBC,Libras,Arrhythmia}
 \end{axis}
 \end{tikzpicture}
+\end{center}
+
+Con la tasa de reducción se puede entender mejor la tasa de acierto. Se observa que en \texttt{Arrhythmia} se obtiene una mayor tasa de acierto en los datos de test a mayor tasa de reducción y en cambio para \texttt{WDBC} a menor tasa de reducción mayor acierto fuera de la muestra. Es relevante la tasa de reducción en \texttt{Arrhythmia} en \texttt{GRASP} debido a que los otros algoritmos empezaron con una solución aleatoria y se han quedado en óptimos locales que tenían en torno a un 50$\%$ de reducción y en cambio \texttt{GRASP}, empezando sin ninguna característica, ha parado antes obteniendo mejores resultados. Para las otras bases de datos este algoritmo también ha llegado a valores cercanos a los de los otros algoritmos, con lo que se deduce que es una buena estrategia de búsqueda. 
 
 \subsubsection{Tiempos}
+
 \pgfplotstabletranspose[input colnames to=DB,columns={TW,TL,TA}]\dataTimes{\dataGlobal}
+
+\begin{center}
 \pgfplotstabletypeset[string type]\dataTimes
+\end{center}
 
 
+\begin{center}
 \begin{tikzpicture}
 \begin{axis}[
     ybar,
@@ -647,6 +666,9 @@ En \texttt{ILS} vemos que se obtienen resultados similares a los de \texttt{BMB}
 \legend{KNN,SFS,BMB,GRASP,ILS}
 \end{axis}
 \end{tikzpicture}
+\end{center}
+
+Observamos en la gráfica de tiempos que los tiempos son similares en los tres algoritmos de esta práctica para las dos primeras bases de datos, con \texttt{GRASP} un poco más lento. En cambio, \texttt{GRASP} es con diferencia es más rápido en \texttt{Arrhythmia} al quedarse con una buena solución muy pronto (alta tasa de reducción de características). También hay que destacar que, teniendo mejores resultados, \texttt{ILS} es más rápido que \texttt{BMB}, pues con cada mutación nos quedamos más cerca del óptimo que generando una solución aleatoria.
 
 \section{Bibliografía}
 \begin{itemize}

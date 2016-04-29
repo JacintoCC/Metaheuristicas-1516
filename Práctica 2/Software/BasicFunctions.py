@@ -1,8 +1,4 @@
 import numpy as np
-from sklearn import neighbors
-from sklearn import cross_validation
-from tempfile import NamedTemporaryFile
-import shutil
 import csv
 
 # Función para cambiar el valor i-ésimo de s

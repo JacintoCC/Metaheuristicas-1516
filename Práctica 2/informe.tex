@@ -10,6 +10,7 @@
 \usepackage{booktabs}
 \usepackage{siunitx}
 \usepackage{pgfplotstable}
+\pgfplotsset{compat=1.12}
 \usepackage{verbatim}
 \usepackage{geometry}
 \usepackage{changepage}
@@ -118,6 +119,7 @@
 \pgfplotstableread[col sep=comma]{Software/Resultados/lILS.csv}\datalILS
 \pgfplotstableread[col sep=comma]{Software/Resultados/aILS.csv}\dataaILS
 
+% Tabla Resumen
 \pgfplotstableread[col sep=comma]{Software/Resultados/results.csv}\dataGlobal
 
 
@@ -172,7 +174,7 @@ Las funciones de evaluación pueden estar basadas en la consistencia, en la Teor
 
 \subsection{Función objetivo}
 	La función objetivo será el porcentaje de acierto en el conjunto de test para el clasificador $3-NN$ obtenido usando las distancias de los individuos $\omega$ en las dimensiones representadas por las características seleccionadas en el vector solución para el conjunto de entrenamiento. El objetivo será maximizar esta función. A la hora de buscar esta solución sólo estaremos manejando los datos de entrenamiento, luego aquí la función objetivo será la media de tasa de acierto para cada uno de los datos de entrenamiento con respecto a todos los demás, por lo que tenemos que usar la técnica de $\textit{Leave-One-Out}$. Esta técnica consiste en quitar del conjunto de datos cada uno de los elementos, comprobar el acierto o no para este dato en concreto, y devolverlo al conjunto de datos. Así evitamos que los resultados estén sesgados a favor de la clase o etiqueta original, al contar siempre con un voto la clase verdadera.\\
-	La implementación de la función objetivo (obtener el score para Test) la he realizado basándome en el código paralelizado realizado para CUDA por Alejandro García Montoro para la función de $\textit{Leave One Out}$. El pseudocódigo incluido se trata del esquema seguido para cada proceso, puesto que el método en $\texttt{Python}$ para pasarle a la GPU los datos de entrenamiento, test, categorías y un puntero con la solución no tiene mayor interés.
+	La implementación de la función objetivo (obtener el score para Test) la he realizado basándome en el código paralelizado realizado para CUDA por Alejandro García Montoro para la función de $\textit{Leave One Out}$. El pseudocódigo incluido se trata del esquema seguido para cada proceso, esto es, cada elemento en el conjunto de datos de entrenamiento, puesto que el método en $\texttt{Python}$ para pasarle a la GPU los datos de entrenamiento, test, categorías y un puntero con la solución no tiene mayor interés.
 	
 \begin{lstlisting}[mathescape=true]
 targetFunction(data_train, categories_train, 
@@ -181,7 +183,7 @@ BEGIN
    test $\leftarrow$ Num. Process
    num_test $\leftarrow$ length(data_test)
    
-   $\textbf{\texttt{exit}}$ if test > num_test
+   $\textbf{\texttt{exit}}$ IF test > num_test
    my_features $\leftarrow$ data_test[test]
    
    k_nearest $\leftarrow$ initialize3Neighbours
@@ -197,8 +199,8 @@ BEGIN
 END
 \end{lstlisting}
 
-	Esto en \texttt{CUDA} lo que hace es guardarnos, para cada proceso, si se ha acertado o no. Posteriormente se pasa el vector con cada resultado (cada ejecución de este código) de nuevo a $\texttt{Python}$ y se calcula el porcentaje de aciertos. Nótese que no se realiza la proyección por las características seleccionadas, esto lo hacemos al pasar los datos.\\
-	Para la función de evaluación de las posibles soluciones 	que se van generando durante la búsqueda utilizo el método realizado por Alejandro García Montoro para usar CUDA. El algoritmo es similar a éste, pero incluye \textit{Leave One Out}:
+	Esto en \texttt{CUDA} lo que hace es guardarnos, para cada proceso, si se ha acertado o no. Posteriormente se pasa el vector con cada resultado (cada ejecución de este código) de nuevo a \texttt{Python} y se calcula el porcentaje de aciertos. Nótese que no se realiza la proyección por las características seleccionadas, esto lo hacemos al pasar los datos.\\
+	Para la función de evaluación de las posibles soluciones que se van generando durante la búsqueda utilizo el método realizado por Alejandro García Montoro para usar CUDA. El algoritmo es similar al anterior, pero incluye \textit{Leave One Out}:
 
 \begin{lstlisting}[mathescape=true]
 targetFunctionLeaveOneOut(data_train, categories_train):
@@ -212,7 +214,7 @@ BEGIN
    k_nearest $\leftarrow$ initialize3Neighbours
 	
    FOR item IN data_train
-     if item $\neq$ sample
+    IF item $\neq$ sample THEN
       distance $\leftarrow$ computeDistance(my_features, item)
       k_nearest $\leftarrow$ update(item, distance)
    END
@@ -236,14 +238,15 @@ END
 \end{lstlisting}
 	
 	
-En esta práctica también es común a todos los métodos el método de búsqueda local. Para favorecer la reducción de características, considero una mejor solución aquella que con la misma calidad en términos de porcentaje de aciertos, tenga un menor número de características seleccionadas. Esto nos permitirá posteriormente hacer un análisis sobre la reducción de características en el sentido de que sólo se llegará a reducir las características con los métodos con los que se llegue a buenas soluciones cuyos vecinos, si no son peores, al menos tienen menos características activadas.\\
+En esta práctica también es común a todos los métodos el método de búsqueda local. En primer lugar, para favorecer la reducción de características, probé a considerar como mejor solución aquella que con la misma calidad en términos de porcentaje de aciertos, tuviera un menor número de características seleccionadas. Sin embargo, esto hacía incrementar notablemente el tiempo de búsqueda, especialmente en la base de datos \texttt{Arrhythmia}, pues al haber tantas características ocupaba gran parte del tiempo de la búsqueda local en reducir el número de seleccionadas en lugar de intentar acceder a posiciones mejores. Sí consideraremos que éstas son mejores soluciones, o mejor dicho, comprobaremos que son mejores soluciones fuera de la búsqueda local.\\
 Como diferencia con respecto a la primera práctica, ahora la solución inicial es un parámetro y no se genera aleatoriamente dentro del método, ya que depende del algoritmo de búsqueda por trayectorias múltiples que usemos:
 
 	\begin{lstlisting}[mathescape=true]
 localSearch(data, categories, solution) BEGIN	
    REPEAT
       first_neig $\leftarrow$  random{1,..., num_features}
-      neighbours $\leftarrow$ {flip(solution,i): i=first_neig,...,first_neig-1}
+      neighbours $\leftarrow$ {flip(solution,i): 
+                            i=first_neig,...,first_neig-1}
       found_better $\leftarrow$ FALSE
 		
       FOR neig IN neighbours
@@ -259,22 +262,21 @@ localSearch(data, categories, solution) BEGIN
 END
 	\end{lstlisting}
 	
-	Donde que el vecino sea mejor que la solución actual significa que tiene una mayor tasa de acierto en el conjunto de datos de entrenamiento, o que la tasa es la misma y tiene menos características seleccionadas.
+	Donde que el vecino sea mejor que la solución actual significa que tiene una mayor tasa de acierto en el conjunto de datos de entrenamiento.
 
 \section{Estructura del método de búsqueda}
 
 \subsection{Búsqueda multiarranque básica}
 
-Este método consiste en la realización de diferentes búsquedas locales que parten de soluciones aleatorias. Para ello, simplemente se lanzan, como se indica en el guión de prácticas, 25 búsquedas locales y devolvemos la mejor solución encontrada. El criterio para considerar que una solución es mejor que otra se basa, como dentro de la búsqueda local, en encontrar el vector de características que ofrezca una mejor tasa de acierto y, de entre ellas, la que tenga menos características seleccionadas. Los resultados esperados serán similares a las mejores ejecuciones del apartado de búsqueda local en la práctica anterior. Se podrá observar también si el hecho de incluir aceptar como mejores soluciones con igual tasa de acierto y menor número de características beneficia o perjudica a la tasa de acierto fuera de los datos de entrenamiento.
+Este método consiste en la realización de diferentes búsquedas locales que parten de soluciones aleatorias. Para ello, simplemente se lanzan, como se indica en el guión de prácticas, 25 búsquedas locales y devolvemos la mejor solución encontrada. El criterio para considerar que una solución es mejor que otra se basa, como se ha dicho previamente, en encontrar el vector de características que ofrezca una mejor tasa de acierto y, de entre ellas, la que tenga menos características seleccionadas. Los resultados esperados serán similares a las mejores ejecuciones del apartado de búsqueda local en la práctica anterior. Se podrá observar también si el hecho de incluir aceptar como mejores soluciones con igual tasa de acierto y menor número de características beneficia o perjudica a la tasa de acierto fuera de los datos de entrenamiento.
 
-	\begin{lstlisting}[mathescape=true]
+	\newpage \begin{lstlisting}[mathescape=true]
 BMB(data, categories) BEGIN	
    num_features $\leftarrow$ length ( data[0] )
-   best_solution $\leftarrow$ {F,...,F}
+   best_solution $\leftarrow$ {F,...,F: size = num_features}
    
    FOR i = 1,...,25
-      solution $\leftarrow$ random({True,False},
-                                   size = num_features)
+      solution $\leftarrow$ random({True,False}, size = num_features)
                                    
       solution $\leftarrow$ localSearch(data, categories, solution)
       IF solution is better than best_solution THEN
@@ -292,7 +294,7 @@ END
 		\begin{lstlisting}[mathescape=true]
 GRASP(data, categories) BEGIN	
    num_features $\leftarrow$ length ( data[0] )
-   best_solution $\leftarrow$ {F,...,F}
+   best_solution $\leftarrow$ {F,...,F: size = num_features}
    
    FOR i = 1,...,25
       solution $\leftarrow$ getGreedySolution(data, categories)
@@ -306,17 +308,17 @@ GRASP(data, categories) BEGIN
 END
 	\end{lstlisting}
 	
-	El interés de este método reside, pues en la obtención de la solución \textit{greedy}. Aquí también hay diferencias con respecto a la primera práctica. Ahora no se trata de ir seleccionando la mejor característica cada vez, sino de ir seleccionando una característica al azar de las que sobrepasen un umbral. Esto añade mayor variabilidad al espacio de búsqueda explorado, con lo que tenemos mayor probabilidad de encontrar una mejor solución. 
+	El interés de este método reside, pues, en la obtención de la solución \textit{greedy}. Aquí también hay diferencias con respecto a la primera práctica. Ahora no se trata de ir seleccionando la mejor característica cada vez, sino de ir seleccionando una característica al azar de las que sobrepasen un umbral. Esto añade mayor variabilidad al espacio de búsqueda explorado, con lo que tenemos mayor probabilidad de encontrar una mejor solución. 
 	
 	
 	\begin{lstlisting}[mathescape=true]
 getGreedySolution(data, categories) BEGIN
-   current_solution $\leftarrow$ {0,...,0: size = num_features}
+   solution $\leftarrow$ {F,...,F: size = num_features}
    tolerance $\leftarrow$ 0.3
    
    REPEAT
       char $\leftarrow$ getCharWithThreshold(data,categories,
-                                             solution,tolerance)
+                                   solution,tolerance)
       
       IF flip(solution, char) is better than solution THEN
          solution $\leftarrow$ flip(solution, char)
@@ -332,7 +334,7 @@ END
 	\begin{lstlisting}[mathescape=true]
 getCharWithThreshold(data, categories,solution,tolerance) BEGIN
    values $\leftarrow$ vector( size = num_features )
-   FOR i IN {1,..., num_features}
+   FOR i = 1,..., num_features
       
       neig $\leftarrow$ neighbours[i]
       values[i] $\leftarrow$ score(data, categories, neig)
@@ -353,15 +355,32 @@ END
 	
 \subsection{ILS}
 
-	Para la búsqueda local iterada, se trata también de realizar 25 iteraciones al igual que en los métodos anteriores. La diferencia ahora está en la solución con la que se parte en cada iteración. Se trata de 
+	Para la búsqueda local iterada, se trata también de realizar 25 iteraciones al igual que en los métodos anteriores. La diferencia ahora está en la solución con la que se parte en cada iteración. En la primera iteración se parte de una solución aleatoria. Para las demás, se parte de una mutación de la mejor solución encontrada hasta el momento. Las mutaciones consisten en cambiar el valor situado en un tanto por ciento de las características, seleccionando aleatoriamente las características a cambiar.
 
+	\begin{lstlisting}[mathescape=true]
+ILS(data, categories) BEGIN	
+   num_features $\leftarrow$ length ( data[0] )
+   best_solution $\leftarrow$ {F,...,F: size = num_features}
+   solution $\leftarrow$ random({True,False}, size = num_features)
+   
+   FOR i = 1,...,25
+      IF solution is better than best_solution THEN
+         best_solution $\leftarrow$ solution
+         
+      solution $\leftarrow$ mutateSolution(best_solution)      
+   END
+	
+   return best_solution
+END
+	\end{lstlisting}
+	
 \section{Algoritmo de comparación}
 
-Como algoritmo de comparación tenemos el algoritmo\textit{greedy} SFS. Partiendo de un vector con ninguna característica seleccionada, exploramos por el entorno y nos quedamos con el vecino que genera una mejor tasa de acierto. Repetimos este proceso hasta que ningún vecino aporta una mejora a la solución obtenida.
+Como algoritmo de comparación tenemos el algoritmo \textit{greedy} SFS. Partiendo de un vector con ninguna característica seleccionada, exploramos por el entorno y nos quedamos con el vecino que genera una mejor tasa de acierto. Repetimos este proceso hasta que ningún vecino aporta una mejora a la solución obtenida.
 
 	\begin{lstlisting}[mathescape=true]
 greedySFS(data, categories) BEGIN
-   solution $\leftarrow$ {0,...,0: size = num_features}
+   solution $\leftarrow$ {F,...,F: size = num_features}
    current_value $\leftarrow$ getValue(data, categories, solution)
    
    REPEAT
@@ -381,25 +400,36 @@ END
 
 \section{Procedimiento para desarrollar la práctica}
 
-El código de la práctica está realizado en $\texttt{Python 3.5.1}$. Comencé por el algoritmo del KNN y el algoritmo $\textit{greedy}$ SFS. Sin embargo, viendo los tiempos (la iteración en la base de datos de Arrhythmia duraba en torno a 10 minutos) me decanté por usar el módulo de $\texttt{Python}$ $\texttt{sklearn}$ para realizar la normalización de los datos, la validación cruzada y el algoritmo KNN, permitiendo entrenar el clasificador con los datos y obtener un $\textit{score}$ al comprobar si concuerda la clase predicha con la original.\\
+El código de la práctica está realizado en $\texttt{Python 3.5.1}$ y en \texttt{CUDA}. Como se ha comentado anteriormente, el código para el KNN está paralelizado usando el código de Alejandro García Montoro para usarlo con \textit{leave-one-out} y añadiéndole un método para usarlo como función de evaluación de la solución obtenida para el conjunto de test. Esto ha permitido reducir los tiempos considerablemente.\\
 
-Los paquetes utilizados son $\texttt{sklearn}$, como se ha mencionado, $\texttt{scipy}$ para leer de una manera sencilla la base de datos, $\texttt{numpy}$ para el manejo de vectores y matrices y tratar que sea algo más eficiente en lugar de las listas de $\texttt{Python}$ y $\texttt{ctype}$ para importar el generador de números aleatorios en $\texttt{C}$ disponible en la página web de la asignatura. La semilla con la que he realizado las ejecuciones es $3141592$, insertada tanto en el generador en $\texttt{C}$ como por el generador de número de aleatorios de $\texttt{numpy}$. He usado los dos porque pretendía usar el primero, que es con el que se realizan las particiones, pero al llegar a los métodos que usan los generadores de números pseudoaleatorios en su funcionamiento me di cuenta de que tendría que repetir el código de importación del módulo en $\texttt{C}$ para cada método, por lo que opté por usar en los métodos el $\texttt{random}$ de $\texttt{numpy}$. Mientras he ido realizando la práctica he ido creando funciones para permitir un más cómodo manejo del programa intentando que el código fuese entendible.
+Los paquetes utilizados son:
+\begin{enumerate}
+	\item \texttt{scipy} para leer de una manera sencilla la base de datos.
+	\item \texttt{numpy} para el manejo de vectores y matrices y tratar que sea algo más eficiente en lugar de las listas de \texttt{Python}.
+	\item \texttt{ctype} para importar el generador de números aleatorios en \texttt{C} disponible en la página web de la asignatura. 
+	\item \texttt{csv} para la lectura y escritura de ficheros \texttt{.csv} con los que manejar más cómodamente los datos.
+	\item \texttt{pycuda} y \texttt{jinja2} para la paralelización en \texttt{CUDA}.
+\end{enumerate}	
+
+	La semilla con la que he realizado las ejecuciones es $3141592$, insertada tanto en el generador en $\texttt{C}$ como en el generador de números de $\texttt{numpy}$ y en el propio de \texttt{Python}. He usado los dos porque pretendía usar el primero, que es con el que se realizan las particiones, pero al llegar a los métodos que usan los generadores de números pseudoaleatorios en su funcionamiento me dí cuenta de que tendría que repetir el código de importación del módulo en \texttt{C} para cada método, por lo que opté por usar en los métodos el \texttt{random} de \texttt{numpy}. Mientras he ido realizando la práctica he ido creando funciones para permitir un más cómodo manejo del programa intentando que el código fuese entendible.
+	
 \subsection{Ejecución del programa}
 La salida de cada ejecución (10 iteraciones de un algoritmo con una base de datos) se puede elegir entre mostrar por pantalla o redirigir a un archivo $\texttt{.csv}$ para manejarlo posteriormente, por ejemplo para incluir la tabla en \LaTeX.\\
 Los parámetros que acepta el programa son:
 \begin{itemize}
 \item Base de datos: Será una letra $\texttt{W,L,A}$ que representa cada una de las bases de datos a utilizar. Este parámetro es el único obligatorio.
-\item Algoritmo utilizado: Por defecto es el KNN. Para introducir uno distinto, se usa $\texttt{-a}$ seguido de una letra entre $\texttt{K,G,L,S,T,E}$ que se corresponden con KNN, \textit{greedy} SFS, \textit{local search}, \textit{simulated annealing}, \textit{tabu search} y \textit{extended tabu search}, respectivamente.
+\item Algoritmo utilizado: Por defecto es el KNN. Para introducir uno distinto, se usa $\texttt{-a}$ seguido de una letra entre \texttt{K,S,B,G,I} que se corresponden con KNN, \textit{greedy} SFS, búsqueda multiarranque básica, \textit{GRASP} e \textit{iterated local search}, respectivamente.
 \item Semilla. Para incluir una semilla, se añade $\texttt{-seed}$ seguido del número que usaremos como semilla. Por defecto es 3141592.
-\item Salida por pantalla o a fichero. Se utiliza con el parámetro opcional \texttt{-write} para escribir en un fichero en una carpeta llamada \texttt{Resultados}. El nombre del fichero será la primera letra de la base de datos utilizada seguida por las iniciales del algoritmo. Incluye también la media para cada columna en la última fila.
+\item Salida por pantalla o a fichero. Se utiliza con el parámetro opcional \texttt{-write} para escribir en un fichero en una carpeta llamada \texttt{Resultados}. El nombre del fichero será la primera letra de la base de datos utilizada seguida por las iniciales del algoritmo. Incluye también la media, el mínimo, el máximo y la desviación típica para cada columna.
 \item \texttt{-h} o \texttt{--help} para mostrar la ayuda y cómo se introducen los parámetros.
 \end{itemize}
+
 Por tanto, la ejecución del programa se hará de la siguiente manera:
 \[ \texttt{python Practica1.py base\_de\_datos [-a algoritmo -seed semilla -write T/F ]} \]
-Si por ejemplo queremos lanzar la base de datos de \texttt{WDBC} con la búsqueda local, semilla 123456 y que los resultados se muestren por pantalla, escribimos
-\[ \texttt{python Practica1.py W -a L -seed 123456}\]
-Si optamos por la base de datos \texttt{Arrhythmia} con la búsqueda tabú extendida y guardar el resultado en un fichero:
-\[ \texttt{python Practica1.py A -a E -write True}\]
+Si por ejemplo queremos lanzar la base de datos de \texttt{WDBC} con GRASP, semilla 123456 y que los resultados se muestren por pantalla, escribimos
+\[ \texttt{python Practica1.py W -a G -seed 123456}\]
+Si optamos por la base de datos \texttt{Arrhythmia} con la búsqueda multiarranque básica y guardar el resultado en un fichero:
+\[ \texttt{python Practica1.py A -a B -write True}\]
 Para mostrar la introducción de parámetros:
 \[ \texttt{python Practica1.py --help}\]
 
@@ -412,10 +442,8 @@ Los casos del problema planteados son tres, cada uno de ellos asociado a una bas
 \begin{itemize}
 \item WDBC: Base de datos con los atributos estimados a partir de una imagen de una aspiración de una masa en la mama. Tiene 569 ejemplos, 30 atributos y debemos clasificar cada individuo en dos valores.
 \item Movement Libras: Base de datos con la representación de los movimientos de la mano en el lenguaje de signos LIBRAS. Tiene 360 ejemplos y consta de 91 atributos.
-\item Arrhythmia: Contiene datos de pacientes durante la presencia y ausencia de arritmia cardíaca. Tiene 386 ejemplos y 278 atributos para categorizar en 5 clases.
+\item Arrhythmia: Contiene datos de pacientes durante la presencia y ausencia de arritmia cardíaca. Tiene 386 ejemplos y 254 atributos para categorizar en 5 clases. Reduje el número de características eliminando las columnas que tuvieran el mismo valor para todos los datos. Hice esto cuando tenía en la búsqueda local que se aceptasen soluciones iguales pero con menor número de características. Como he comentado, tardaba mucho así que pensé que en \texttt{Arrhythmia}, debido al gran número de datos y columnas, para cada búsqueda se gastaba demasiado tiempo en descartar estas 24 características cuando estuviesen seleccionadas. Sin embargo, debido a que buena parte del resto de columnas tienen valores parecidos para muchos de los elementos, el tiempo seguía siendo excesivo, con lo que descarté esa modificación de la búsqueda local.
 \end{itemize}
-
-Hay que mencionar que tanto la ejecución de la búsqueda tabú como la búsqueda tabú extendida se han realizado no con 15000 comprobaciones como indica el guión de la práctica sino con 5000 debido a que lleva demasiado tiempo ejecutarlas al no tener otra condición de parada que realizar estas ejecuciones. En la medida de los tiempos se ha incluido la calificación del conjunto de test, con lo que se añade un poco de tiempo extra en cada iteración, que no es representativo con respecto a lo que se tarda en obtener la solución. Esto nos da una idea sobre la influencia del tamaño de los datos sobre cada evaluación de la solución actual y la influencia que esto tiene en el tiempo para obtener la solución, pues no sólo influye el tamaño del espacio de búsqueda.
 
 
 \subsection{Resultados}
@@ -426,6 +454,9 @@ Hay que mencionar que tanto la ejecución de la búsqueda tabú como la búsqued
 % Salida por pantalla
 \maketable{\dataKNN}
 
+
+En este caso el análisis es realmente el mismo que el de la primera práctica. Con el \texttt{KNN} se ve cómo es la BD en general y qué tasas de acierto se obtiene seleccionando todas las categorías. Las diferentes iteraciones y sus resultados no son más que para particiones distintas, pues la solución es la misma para todas las ejecuciones del algoritmo. Se ve que en \texttt{WDBC} y \texttt{Arrhythmia} se obtienen porcentajes similares para la clasificación dentro de la muestra y fuera, como cabría esperar, pues las particiones se hacen equilibradamente, y sin embargo en \texttt{Libras} el porcentaje de acierto fuera de la muestra es superior. Esto se puede deber a que hay un gran número de clases y no tantos representantes de esas clases como en las dos primeras bases de datos.
+
 \subsubsection{SFS}
 
 % Tablas Resumen SFS
@@ -434,12 +465,17 @@ Hay que mencionar que tanto la ejecución de la búsqueda tabú como la búsqued
 % Salida por pantalla
 \maketable{\dataSFS}
 
+Para el algoritmo \texttt{SFS} también se realizó el análisis en la práctica anterior, lo que nos permite comparar los tiempos entre haber usado el módulo de \texttt{scikit} y la paralelización realizada en esta práctica, siendo ahora en media más de 150 veces más rápido, para la base de datos de \texttt{Arrhythmia}, en otras BD y algoritmos la diferencia de tiempos puede seguir otra proporción.
+
 \subsubsection{Búsqueda multiarranque básica}
 % Tablas Resumen LS
 \makeresume{\dataBMB}{\datawBMB}{\datalBMB}{\dataaBMB}
 
 % Salida por pantalla
 \maketable{\dataBMB}
+
+En la búsqueda multiarranque básica vemos cómo llegamos a valores de la tasa de acierto (en especial dentro de la muestra) a las que no llegamos en la práctica anterior. Si observamos los resultados de la búsqueda local de la práctica anterior se comprueba que las mayores tasas de clasificación de entrenamiento de entre las diferentes particiones son similares a la media de las tasas obtenidas ahora. Y es que (aún siendo distintas particiones) si en la práctica anterior se realizaron 10 búsquedas locales por BD, ahora estamos haciendo 25 por partición. 
+
 
 \subsubsection{GRASP}
 % Tablas Resumen SA
@@ -448,12 +484,16 @@ Hay que mencionar que tanto la ejecución de la búsqueda tabú como la búsqued
 % Salida por pantalla
 \maketable{\dataGRASP}
 
+De los resultados de GRASP, teniendo en cuenta que parte de una solución \textit{greedy}, llama la atención la poca reducción de las características en \texttt{WDBC}, aunque si vemos que la tasa de acierto con el \texttt{KNN} es tan alta, ha podido ir tomando características de una en una de aquellas mejores que un umbral obteniendo siempre mejores resultados. En cambio para \texttt{Arrhythmia}, la reducción sí es mayor, fruto de que haya tantas características y no todas tengan realmente influencia. 
+
 \subsubsection{ILS}
 % Tablas Resumen TS
 \makeresume{\dataILS}{\datawILS}{\datalILS}{\dataaILS}
 
 % Salida por pantalla
 \maketable{\dataILS}
+
+En \texttt{ILS} vemos que se obtienen resultados similares a los de \texttt{BMB}, sólo un poco mejores. Esto se traduce en que pese a disponer un algoritmo simple para explorar vecindarios mayores a los considerados hasta ahora, el resultado está mejor dirigido que generar soluciones completamente aleatorias y aplicar búsqueda local. 
 
 \subsubsection{Comparación}
  

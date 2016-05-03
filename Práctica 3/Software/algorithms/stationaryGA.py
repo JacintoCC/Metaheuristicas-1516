@@ -1,23 +1,22 @@
 import numpy as np
 from algorithms.geneticAlgorithm import *
-from knnGPU.knnLooGPU import *
+# from knnGPU.knnLooGPU import *
 from BasicFunctions import *
 
-def selectionOp_Stationary(population, pop_scores):
-    selected_chrom = np.random.randint(len(pop_scores), size = 4)
-    p_1 = tournament(selected_chrom[:2], pop_scores)
-    p_2 = tournament(selected_chrom[2:], pop_scores)
+def selectionOp_Stationary(population):
+    sel_items = np.random.randint(len(population), size = 4)
+    p_1 = tournament(sel_items[:2])
+    p_2 = tournament(sel_items[2:])
 
-    return np.array([population[p_1], population[p_2]])
+    return np.array([population[p_1], population[p_2]], dtype = genes_type)
 
-def replaceOp_Stationary(population, pop_scores, descendants, desc_scores):
+def replaceOp_Stationary(population, descendants):
     num_descendants = len(descendants)
-    pop = np.concatenate((population[-num_descendants:],descendants))
-    scores = np.concatenate((pop_scores[-num_descendants:],desc_scores))
+    replacement = np.concatenate((population[-num_descendants:],descendants))
 
-    sort_population(pop, scores)
-    population[-num_descendants:] = pop[:num_descendants]
-    pop_scores[-num_descendants:] = scores[:num_descendants]
+    replacement.sort(order = 'value')
+    population[:num_descendants] = replacement[-num_descendants:]
+
 
 def stationaryGA(train_data, train_categ, scorer):
     return geneticAlgorithm(train_data, train_categ, scorer,

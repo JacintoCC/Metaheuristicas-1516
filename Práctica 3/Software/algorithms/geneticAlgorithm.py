@@ -1,7 +1,9 @@
 import numpy as np
-from knnGPU.knnLooGPU import *
+# from knnGPU.knnLooGPU import *
 from math import floor
 from BasicFunctions import *
+
+genes_type = [('chromosome',np.object),('score', np.float)]
 
 def twoPointsCrossOperator(parents):
     num_features = len(parents[0])
@@ -38,29 +40,29 @@ def huxCrossOperator(parents):
             else:
                 gen = np.random.random() < 0.5
                 descendants[2*i][j]   = gen
-                descendants[2*i+1][j] = gen
+                descendants[2*i+1][j] = not gen
 
     return descendants
 
 def getInitialPopulation(num_genes, num_chromosomes):
-    population = np.array([ np.random.random(size = num_genes) < 0.5
+    population = np.array([ np.array(np.random.random(size = num_genes) < 0.5)
                            for i in range(num_chromosomes) ])
 
     return population
 
-def tournament(pair, scores):
-    if scores[pair[0]] > scores[pair[1]]:
+def tournament(pair):
+    if pair[0]['value'] > pair[1]['value']:
         return pair[0]
-    elif scores[pair[1]] > scores[pair[0]]:
+    elif pair[0]['value'] < pair[1]['value']:
         return pair[1]
     else:
-        return pair[np.random.randint(2)]
+        if sum(pair[0]['chromosome']) < sum(pair[0]['chromosome']):
+            return pair[0]
+        elif sum(pair[0]['chromosome']) < sum(pair[0]['chromosome']):
+            return pair[1]
+        else:
+            return pair[np.random.randint(2)]
 
-
-def sort_population(population, pop_scores):
-    population, pop_scores = (list(x) for x in zip(*sorted(zip(population, pop_scores),
-                                                           reverse = True,
-                                                           key=lambda pair: pair[1])))
 
 def mutate(descendants, mutation_prob):
     num_genes = len(descendants[0])
@@ -88,33 +90,37 @@ def geneticAlgorithm(train_data, train_categ, scorer,
     mutation_prob = 0.001
 
     # Getting initial population
-    population = getInitialPopulation(num_features, num_chromosomes)
+    pop_initial = getInitialPopulation(num_features, num_chromosomes)
     pop_scores = np.array([scorer(train_data[:,chromosome], train_categ)
-                                  for chromosome in population])
+                                  for chromosome in pop_initial])
+
+    population = np.array(zip(pop_initial, pop_scores), dtype = genes_type)
 
     num_checks = num_chromosomes
-    sort_population(population, pop_scores)
+    sort_population(population)
 
     while num_checks<max_checks:
         # Selección
-        selected_parents = selectionOperator(population, pop_scores)
+        selected_parents = selectionOperator(population)
 
         # Cruce
-        descendants = crossOperator(selected_parents)
+        desc_chrom = crossOperator(selected_parents)
 
         # Mutación
-        mutationOperator(descendants, mutation_prob)
+        mutationOperator(desc_chrom, mutation_prob)
 
         # Evaluación
         desc_scores = [scorer(train_data[:,desc], train_categ)
-                              for desc in descendants]
+                       for desc in descendants]
         num_checks += len(descendants)
 
+        descendants = np.array(zip(desc_chrom, desc_scores), dtype = genes_type)
+
         # Reemplazamiento
-        replaceOperator(population, pop_scores, descendants, desc_scores)
+        replaceOperator(population, descendants)
 
         # Reordenación
-        sort_population(population, pop_scores)
+        population.sort(order = 'score')
 
 
-    return [population[0], pop_scores[0]]
+    return population[-1]['chromosome'], population[-1]['score']

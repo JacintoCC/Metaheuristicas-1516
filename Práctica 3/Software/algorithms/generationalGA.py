@@ -1,31 +1,28 @@
 import numpy as np
 from algorithms.geneticAlgorithm import *
-from knnGPU.knnLooGPU import *
+# from knnGPU.knnLooGPU import *
 from BasicFunctions import *
 
-def selectionOp_Generational(population, pop_scores):
-    num_parents = len(pop_scores)
-    selected_chrom = np.random.randint(num_parents, size = 2*num_parents)
-    parents = np.zeros((num_parents,len(population[0])),np.bool)
+def selectionOp_Generational(population):
+    num_parents = len(population)
+    sel_items = np.random.randint(num_parents, size = 2*num_parents)
+    tournament_parents = population[sel_items]
 
-    for i in range(num_parents):
-        p = tournament(selected_chrom[(2*i):(2*(i+1))], pop_scores)
-        parents[i] = population[p]
+    parents = [tournament(population[sel_items[(2*i):(2*(i+1))]])
+               for i in range(num_parents)]
 
-    return parents
+    return np.array(parents, dtype = genes_type)
 
-def replaceOp_Generational(population, pop_scores, descendants, desc_scores):
+def replaceOp_Generational(population, descendants):
     num_descendants = len(descendants)
-    best_ancestor = population[0]
+    best_ancestor = population[-1]
 
-    sort_population(descendants, desc_scores)
+    descendants.sort(order = 'score')
 
     if best_ancestor not in descendants:
-        num_descendants[-1] = best_ancestor
-        desc_scores[-1] = pop_scores[0]
+        descendants[0] = best_ancestor
 
     population = descendants
-    pop_scores = desc_scores
 
 
 def generationalGA(train_data, train_categ, scorer):

@@ -21,6 +21,28 @@ def twoPointsCrossOperator(parents):
 
     return descendants
 
+def huxCrossOperator(parents):
+    num_features = len(parents[0])
+    num_descendants = len(parents)
+    descendants = np.zeros((num_descendants,num_features), dtype=np.bool)
+
+    for i in range(int(num_descendants//2)):
+        parent1 = parents[2*i]
+        parent2 = parents[2*i+1]
+
+        for j in range(num_features):
+            gen_p1 = parent1[j]
+            gen_p2 = parent2[j]
+            if gen_p1 == gen_p2:
+                descendants[2*i][j]   = gen_p1
+                descendants[2*i+1][j] = gen_p1
+            else:
+                gen = np.random.random() < 0.5
+                descendants[2*i][j]   = gen
+                descendants[2*i+1][j] = gen
+
+    return descendants
+
 def getInitialPopulation(num_genes, num_chromosomes):
     population = np.array([ np.random.random(size = num_genes) < 0.5
                            for i in range(num_chromosomes) ])

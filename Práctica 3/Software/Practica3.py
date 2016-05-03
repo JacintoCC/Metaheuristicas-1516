@@ -11,6 +11,7 @@ from BasicFunctions import *
 
     # Importación de los algoritmos utilizados en la práctica
 from algorithms.kNNSolution import kNNSolution
+from algorithms.greedySFS import greedySFS
 from algorithms.generationalGA import generationalGA
 from algorithms.stationaryGA import stationaryGA
 

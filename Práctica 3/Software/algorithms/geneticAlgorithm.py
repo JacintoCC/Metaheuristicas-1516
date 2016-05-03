@@ -1,5 +1,4 @@
 import numpy as np
-from algorithms.localSearch import *
 from knnGPU.knnLooGPU import *
 from math import floor
 from BasicFunctions import *
@@ -72,8 +71,8 @@ def mutate(descendants, mutation_prob):
     if np.random.random() < (num_total_genes*mutation_prob-num_genes_to_mutate):
         num_genes_to_mutate += 1
 
-    genes_to_mutate = np.choice(np.arange(num_total_genes,replace=False,
-                                          size = num_genes_to_mutate))
+    genes_to_mutate = np.random.choice(np.arange(num_total_genes),replace=False,
+                                          size = num_genes_to_mutate)
 
     for gen in genes_to_mutate:
         flip(descendants[gen//num_genes],gen%num_genes)
@@ -104,10 +103,10 @@ def geneticAlgorithm(train_data, train_categ, scorer,
         descendants = crossOperator(selected_parents)
 
         # Mutación
-        mutationOperator(descendants, mutation_prob):
+        mutationOperator(descendants, mutation_prob)
 
         # Evaluación
-        desc_scores = [scorer(train_data[:,desc, train_categ)
+        desc_scores = [scorer(train_data[:,desc], train_categ)
                               for desc in descendants]
         num_checks += len(descendants)
 

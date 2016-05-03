@@ -8,12 +8,12 @@ def selectionOp_Stationary(population, pop_scores):
     p_1 = tournament(selected_chrom[:2], pop_scores)
     p_2 = tournament(selected_chrom[2:], pop_scores)
 
-    return np.array([population[p_1], population[p_2])
+    return np.array([population[p_1], population[p_2]])
 
 def replaceOp_Stationary(population, pop_scores, descendants, desc_scores):
     num_descendants = len(descendants)
-    pop = np.concatenate(population[-num_descendants:],descendants)
-    scores = np.concatenate(pop_scores[-num_descendants:],desc_scores)
+    pop = np.concatenate((population[-num_descendants:],descendants))
+    scores = np.concatenate((pop_scores[-num_descendants:],desc_scores))
 
     sort_population(pop, scores)
     population[-num_descendants:] = pop[:num_descendants]

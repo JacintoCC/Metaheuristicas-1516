@@ -26,9 +26,9 @@ def replaceOp_Generational(population, pop_scores, descendants, desc_scores):
 
     population = descendants
     pop_scores = desc_scores
-    
 
-def stationaryGA(train_data, train_categ, scorer):
+
+def generationalGA(train_data, train_categ, scorer):
     return geneticAlgorithm(train_data, train_categ, scorer,
                             selectionOp_Generational, twoPointsCrossOperator,
                             mutate, replaceOp_Generational)

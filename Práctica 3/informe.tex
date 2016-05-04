@@ -104,7 +104,7 @@
 \pgfplotstableread[col sep=comma]{Software/Resultados/lSFS.csv}\datalSFS
 \pgfplotstableread[col sep=comma]{Software/Resultados/aSFS.csv}\dataaSFS
 
-% Tablas AGE
+% Tablas AGG
 \pgfplotstableread[col sep=comma]{Software/Resultados/wAGG.csv}\datawAGG
 \pgfplotstableread[col sep=comma]{Software/Resultados/lAGG.csv}\datalAGG
 \pgfplotstableread[col sep=comma]{Software/Resultados/aAGG.csv}\dataaAGG
@@ -165,7 +165,8 @@ Las funciones de evaluación pueden estar basadas en la consistencia, en la Teor
 		\item Representación entera: Cada solución es un vector de tamaño fijo $m \leq n$ con las características seleccionadas. Esta representación sí es adecuada si tenemos restricciones sobre el número de características tomadas ya que no podemos hacerlo con más de $m$ características.
 		\item Representación de orden: Cada solución es una permutación de $n$ elementos, ordenados según la importancia de cada característica. Aquí también se maneja el cumplimiento de restricciones pues una vez encontrada la solución, tomaremos sólo las primeras $m$ características.
 	\end{itemize}
-	Se ha de mencionar que en las dos últimas representaciones el espacio de soluciones es mayor que el espacio de búsqueda, justificado en la representación de orden porque da más información (podríamos tomar soluciones de longitud variable), pero que en la representación entera sólo es razonable asumir si tenemos una restricción de longitud fija. Además, otra ventaja de la representación binaria es la facilidad para aplicarle operadores (de vecindario, en posteriores prácticas de cruce...) manteniendo la consistencia.
+	Se ha de mencionar que en las dos últimas representaciones el espacio de soluciones es mayor que el espacio de búsqueda, justificado en la representación de orden porque da más información (podríamos tomar soluciones de longitud variable), pero que en la representación entera sólo es razonable asumir si tenemos una restricción de longitud fija. Además, otra ventaja de la representación binaria es la facilidad para aplicarle operadores (de vecindario, en posteriores prácticas de cruce...) manteniendo la consistencia.\\
+	Para esta práctica, aunque la representación de las soluciones también venga dada por la representación binaria, tendremos en todo momento una población en forma de \texttt{array} estructurado. Esto es, un \texttt{array} donde cada elemento está formado a su vez por dos cosas: el cromosoma, es decir, el vector de valores \textit{booleanos} que determinan la selección o no de una característica, y el valor o \textit{score} del mismo. De esta manera podemos saber la tasa de acierto de un vector solución sin tener que volver a llamar a la función de evaluación; sólo llamaremos a esta función cuando surja el nuevo individuo de la población.
 
 \subsection{Función objetivo}
 	La función objetivo será el porcentaje de acierto en el conjunto de test para el clasificador $3-NN$ obtenido usando las distancias de los individuos $\omega$ en las dimensiones representadas por las características seleccionadas en el vector solución para el conjunto de entrenamiento. El objetivo será maximizar esta función. A la hora de buscar esta solución sólo estaremos manejando los datos de entrenamiento, luego aquí la función objetivo será la media de tasa de acierto para cada uno de los datos de entrenamiento con respecto a todos los demás, por lo que tenemos que usar la técnica de $\textit{Leave-One-Out}$. Esta técnica consiste en quitar del conjunto de datos cada uno de los elementos, comprobar el acierto o no para este dato en concreto, y devolverlo al conjunto de datos. Así evitamos que los resultados estén sesgados a favor de la clase o etiqueta original, al contar siempre con un voto la clase verdadera.\\
@@ -221,7 +222,113 @@ END
 \end{lstlisting}
 
 \subsection{Operadores comunes}
-	Entenderemos como vecindario de una solución a los vectores que sólo difieren en una posición. Por tanto, el operador para movernos a una solución vecina consistirá en cambiar una posición determinada:
+	
+	En esta práctica no sólo hay diversos operadores comunes, sino que el esquema general de los algoritmos es el mismo y las diferencias están, precisamente, en operadores concretos diferentes para cada algoritmo. Presentaré en primer lugar la estructura de los algoritmos genéticos implementados y posteriormente los operadores comunes de estos algoritmos.
+	
+\begin{lstlisting}[mathescape=true]
+geneticAlgorithm(data, categories, operators):
+BEGIN
+   MAX_CHECKS $\leftarrow$ 1500
+   MUTATION_PROBABILITY  $\leftarrow$ 0.001
+   
+
+   chromosomes $\leftarrow$ {{random{T,F}: size = num_features }:
+                                           size = 30}
+   scores $\leftarrow$ {score(data[chrom],categories): chrom $\in$ chromosomes} 
+   
+   population $\leftarrow$ concatenate( (chromosomes, scores), by columns)
+   sort(population, by scores)
+   
+   num_checks $\leftarrow$ 30
+   
+   WHILE num_checks < MAX_CHECKS DO
+   
+      selected_parents $\leftarrow$ selectionOperator(population)
+      
+      descendants_chrom $\leftarrow$  crossOperator(selected_parents)
+      descendants_chrom $\leftarrow$ mutationOperator(descendants_chrom,
+                                            MUTATION_PROBABILITY)
+                                                      
+      descendants_scores $\leftarrow$ {score(data[chrom],categories): 
+                                   chrom $\in$ descendants_chrom} 
+                                           
+      descendants $\leftarrow$ concatenate((descendants_chrom,
+                                 descendants_scores), by columns)
+      num_checks += length(descendants)
+                                                
+      replaceOperator(population, descendants)
+      sort(population, by scores)
+   END
+END
+\end{lstlisting}	
+
+	Esta estructura básica hará más fácil la construcción de algoritmos evolutivos, pues sólo tendremos que modificar los operadores de selección, cruce, mutación y reemplazamiento. El funcionamiento será el visto en clase: en primer lugar se genera una población aleatoria, evaluamos y ordenamos con respecto a esta puntuación obtenida. Entonces, mientras el número de evaluaciones realizados sea menor que el máximo establecido ($15000$ en nuestro caso), se realiza el siguiente bucle:
+	
+\begin{enumerate}[i]
+\item Se seleccionan unos padres de la población con \texttt{selectionOperator}.
+\item Estos padres se reproducen mediante \texttt{crossOperator}
+\item Los cromosomas obtenidos se someten a una mutación aleatoria usando \texttt{mutation}-\texttt{Operator}
+\item Se evalúan los hijos.
+\item Se produce un reemplazo en la generación.
+\item Se reordena la población.
+\end{enumerate}
+
+	Finalmente, se devuelve el mejor individuo de la población existente al final de las evaluaciones. Para los dos algoritmos se comparten los operadores de cruce y mutación:
+	
+\subsubsection{Operador de cruce}
+
+\paragraph{Operador de cruce de dos puntos}
+
+	El operador de cruce que se indica en la práctica para hacer es el cruce clásico en dos puntos. Para este cruce, dados dos padres tomamos dos posiciones aleatorias en dos vectores e intercambiamos la parte central, obteniendo a los hijos:
+	
+\begin{lstlisting}[mathescape=true]
+twoPointsCrossOperator( parents ):
+BEGIN
+   desc_chromosomes $\leftarrow$ array(type = bool vector,
+                                       length = length(parents)
+   FOR i IN {0,2,4,...,length(parents)-2} BEGIN
+      parent_1 $\leftarrow$ parents[i]
+      parent_2 $\leftarrow$ parents[i+1]
+      
+      a,b $\leftarrow$ random{1,$\dots$,num_features-1, size = 2,replace=False}
+      
+      desc[i] $\leftarrow$ concatenate(parent_$1_0$,$\dots$,parent_$1_{a-1}$,
+                             parent_$2_a$,$\dots$,parent_$2_{b-1}$,
+                             parent_$1_b$,$\dots$,parent_$2_{num\_features-1}$)
+   END
+END
+
+\end{lstlisting}
+	
+\paragraph{Operador de cruce uniforme}
+
+	He implementado también una modificación sobre el \textit{Half Cross Uniform} (HUX) consistente en, dados dos padres, asignar a cada gen del hijo el valor del gen de los padres si éste coincide en ambos; si es distinto, asignamos al gen de cada uno de los hijos los valores \texttt{True} o \texttt{False} aleatoriamente. Esto significa que, para un gen en el que los padres tienen distintos valores, un hijo (aleatoriamente en cada gen) recibirá \texttt{True} y el otro \texttt{False}. Así maximizamos la distancia \textit{hamming} entre los hijos, obteniendo mayor diversidad. 
+	
+\begin{lstlisting}[mathescape=true]
+twoPointsCrossOperator( parents ):
+BEGIN
+   desc_chromosomes $\leftarrow$ array(type = bool vector,
+                                       length = length(parents)
+   FOR i IN {0,2,4,...,length(parents)-2} BEGIN
+      parent_1 $\leftarrow$ parents[i]
+      parent_2 $\leftarrow$ parents[i+1]
+      
+      a,b $\leftarrow$ random{1,$\dots$,num_features-1, size = 2,replace=False}
+      
+      desc[i] $\leftarrow$ concatenate(parent_$1_0$,$\dots$,parent_$1_{a-1}$,
+                             parent_$2_a$,$\dots$,parent_$2_{b-1}$,
+                             parent_$1_b$,$\dots$,parent_$2_{num\_features-1}$)
+   END
+END
+
+\end{lstlisting}
+	
+	
+\subsubsection{Operador de mutación}
+
+	El operador de mutación se encarga de introducir diversidad en la población, favoreciendo la búsqueda en distintas zonas del espacio. Sin embargo, no podemos basar nuestra estrategia de búsqueda de buenas soluciones sólo en la mutación, pues esto nos haría explorar más zonas de búsqueda, sí, pero haciéndolo de forma aleatoria, no intensificando sobre regiones de las que se tenga información de que pueden ser buenas. Debido a esto, la probabilidad de mutación será baja, en concreto, de $0.001$ por cada gen. Para ahorrar cálculos repetitivos he descartado la opción de hacer un \texttt{random} por cada gen que se somete al operador de mutación, mutando $1$ gen seleccionado aleatoriamente por cada $1000$ genes que pasen por el método en cuestión. Además, para el resto de dividir el número de genes de la población de hijos entre $1000$ se genera un número aleatorio. Si este número es menor que 
+	La operación para mutar un bit de un determinado individuo es la ya conocida operación \texttt{flip} que nos hacía obtener los vecinos en las prácticas anteriores:
+	
 \begin{lstlisting}[mathescape=true]
 flip(solution, positon):
 BEGIN
@@ -231,33 +338,23 @@ BEGIN
 	RETURN neighbour
 END
 \end{lstlisting}
-	
-	
-En esta práctica también es común a todos los métodos el método de búsqueda local. En primer lugar, para favorecer la reducción de características, probé a considerar como mejor solución aquella que con la misma calidad en términos de porcentaje de aciertos, tuviera un menor número de características seleccionadas. Sin embargo, esto hacía incrementar notablemente el tiempo de búsqueda, especialmente en la base de datos \texttt{Arrhythmia}, pues al haber tantas características ocupaba gran parte del tiempo de la búsqueda local en reducir el número de seleccionadas en lugar de intentar acceder a posiciones mejores. Sí consideraremos que éstas son mejores soluciones, o mejor dicho, comprobaremos que son mejores soluciones fuera de la búsqueda local.\\
-Como diferencia con respecto a la primera práctica, ahora la solución inicial es un parámetro y no se genera aleatoriamente dentro del método, ya que depende del algoritmo de búsqueda por trayectorias múltiples que usemos:
 
-	\begin{lstlisting}[mathescape=true]
-localSearch(data, categories, solution) BEGIN	
-   REPEAT
-      first_neig $\leftarrow$  random{1,..., num_features}
-      neighbours $\leftarrow$ {flip(solution,i): 
-                            i=first_neig,...,first_neig-1}
-      found_better $\leftarrow$ FALSE
-		
-      FOR neig IN neighbours
-         IF neigh is better than solution THEN
-            found_better $\leftarrow$ TRUE
-            solution $\leftarrow$ neig
-            BREAK
-		
-         END
-   WHILE( found_better )
+	Por tanto, el operador de mutación nos queda de la siguiente manera:
 	
-   return solution
+\begin{lstlisting}[mathescape=true]
+mutate(descendants_chromosomes, mutation_prob):
+BEGIN
+	total_num_genes $\leftarrow$ length(descendants_chromosomes)* 
+                                 length(descendants_chromosomes[0])
+                                 
+    num_gens_to_mutate $\leftarrow$ floor(total_num_genes*mutation_prob)
+    
+    
+	
+	
 END
-	\end{lstlisting}
+\end{lstlisting}
 	
-	Donde que el vecino sea mejor que la solución actual significa que tiene una mayor tasa de acierto en el conjunto de datos de entrenamiento.
 
 \section{Estructura del método de búsqueda}
 

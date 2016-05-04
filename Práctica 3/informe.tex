@@ -91,6 +91,15 @@
 %  - Columna
 \newcommand{\getElement}[3]{\pgfplotstablegetelem{#2}{#3}\of{#1} \pgfplotsretval}
 
+%Definición estilo en pseudocódigo
+\lstset{language=C,
+		otherkeywords={FOR,BEGIN,WHILE,IF,END,THEN,ELSE,DO,RETURN},
+        basicstyle=\ttfamily,
+        keywordstyle=\color{blue}\bfseries,
+        stringstyle=\color{blue}\ttfamily,
+        commentstyle=\color{green}\ttfamily,
+               breaklines=true
+}
 
 \begin{document}
 
@@ -198,13 +207,14 @@ END
 	Esto en \texttt{CUDA} lo que hace es guardarnos, para cada proceso, si se ha acertado o no. Posteriormente se pasa el vector con cada resultado (cada ejecución de este código) de nuevo a \texttt{Python} y se calcula el porcentaje de aciertos. Nótese que no se realiza la proyección por las características seleccionadas, esto lo hacemos al pasar los datos.\\
 	Para la función de evaluación de las posibles soluciones que se van generando durante la búsqueda utilizo el método realizado por Alejandro García Montoro para usar CUDA. El algoritmo es similar al anterior, pero incluye \textit{Leave One Out}:
 
+\newpage
 \begin{lstlisting}[mathescape=true]
 targetFunctionLeaveOneOut(data_train, categories_train):
 BEGIN
    sample $\leftarrow$ Num. Process
    num_samples $\leftarrow$ length(data_train)
    
-   $\textbf{\texttt{exit}}$ if sample > num_samples
+   $\textbf{\texttt{exit}}$ IF sample > num_samples
    my_features $\leftarrow$ data_train[sample]
    
    k_nearest $\leftarrow$ initialize3Neighbours
@@ -233,10 +243,12 @@ BEGIN
    
 
    chromosomes $\leftarrow$ {{random{T,F}: size = num_features }:
-                                           size = 30}
-   scores $\leftarrow$ {score(data[chrom],categories): chrom $\in$ chromosomes} 
+                                               size = 30}
+   scores $\leftarrow$ {score(data[chrom],categories): 
+                                     chrom $\in$ chromosomes} 
    
-   population $\leftarrow$ concatenate( (chromosomes, scores), by columns)
+   population $\leftarrow$ concatenate( (chromosomes, scores), 
+                                              by columns)
    sort(population, by scores)
    
    num_checks $\leftarrow$ 30
@@ -247,13 +259,14 @@ BEGIN
       
       descendants_chrom $\leftarrow$  crossOperator(selected_parents)
       descendants_chrom $\leftarrow$ mutationOperator(descendants_chrom,
-                                            MUTATION_PROBABILITY)
+                                         MUTATION_PROBABILITY)
                                                       
       descendants_scores $\leftarrow$ {score(data[chrom],categories): 
-                                   chrom $\in$ descendants_chrom} 
+                                    chrom $\in$ descendants_chrom} 
                                            
       descendants $\leftarrow$ concatenate((descendants_chrom,
-                                 descendants_scores), by columns)
+                                          descendants_scores), 
+                                                  by columns)
       num_checks += length(descendants)
                                                 
       replaceOperator(population, descendants)
@@ -285,12 +298,13 @@ END
 twoPointsCrossOperator( parents ):
 BEGIN
    desc_chromosomes $\leftarrow$ array(type = bool vector,
-                                       length = length(parents)
+                                     length = length(parents))
    FOR i IN {0,2,4,...,length(parents)-2} BEGIN
       parent_1 $\leftarrow$ parents[i]
       parent_2 $\leftarrow$ parents[i+1]
       
-      a,b $\leftarrow$ random{1,$\dots$,num_features-1, size = 2,replace=False}
+      a,b $\leftarrow$ {random{1,$\dots$,num_features-1}, size = 2,
+                                               replace=False}
       
       desc[i] $\leftarrow$ concatenate(parent_$1_0$,$\dots$,parent_$1_{a-1}$,
                              parent_$2_a$,$\dots$,parent_$2_{b-1}$,
@@ -308,12 +322,13 @@ END
 twoPointsCrossOperator( parents ):
 BEGIN
    desc_chromosomes $\leftarrow$ array(type = bool vector,
-                                       length = length(parents)
+                                      length = length(parents)
    FOR i IN {0,2,4,...,length(parents)-2} BEGIN
       parent_1 $\leftarrow$ parents[i]
       parent_2 $\leftarrow$ parents[i+1]
       
-      a,b $\leftarrow$ random{1,$\dots$,num_features-1, size = 2,replace=False}
+      a,b $\leftarrow$ random{1,$\dots$,num_features-1, size = 2,
+                                              replace=False}
       
       desc[i] $\leftarrow$ concatenate(parent_$1_0$,$\dots$,parent_$1_{a-1}$,
                              parent_$2_a$,$\dots$,parent_$2_{b-1}$,
@@ -326,7 +341,8 @@ END
 	
 \subsubsection{Operador de mutación}
 
-	El operador de mutación se encarga de introducir diversidad en la población, favoreciendo la búsqueda en distintas zonas del espacio. Sin embargo, no podemos basar nuestra estrategia de búsqueda de buenas soluciones sólo en la mutación, pues esto nos haría explorar más zonas de búsqueda, sí, pero haciéndolo de forma aleatoria, no intensificando sobre regiones de las que se tenga información de que pueden ser buenas. Debido a esto, la probabilidad de mutación será baja, en concreto, de $0.001$ por cada gen. Para ahorrar cálculos repetitivos he descartado la opción de hacer un \texttt{random} por cada gen que se somete al operador de mutación, mutando $1$ gen seleccionado aleatoriamente por cada $1000$ genes que pasen por el método en cuestión. Además, para el resto de dividir el número de genes de la población de hijos entre $1000$ se genera un número aleatorio. Si este número es menor que 
+	El operador de mutación se encarga de introducir diversidad en la población, favoreciendo la búsqueda en distintas zonas del espacio. Sin embargo, no podemos basar nuestra estrategia de búsqueda de buenas soluciones sólo en la mutación, pues esto nos haría explorar más zonas de búsqueda, sí, pero haciéndolo de forma aleatoria, no intensificando sobre regiones de las que se tenga información de que pueden ser buenas. Debido a esto, la probabilidad de mutación será baja, en concreto, de $0.001$ por cada gen. Para ahorrar cálculos repetitivos he descartado la opción de hacer un \texttt{random} por cada gen que se somete al operador de mutación, mutando $1$ gen seleccionado aleatoriamente por cada $1000$ genes que pasen por el método en cuestión. Además, para el resto de dividir el número de genes de la población de hijos entre $1000$ se genera un número aleatorio. Si este número es menor que el resto de la división por la probabilidad de realizar una mutación, mutaremos $1$ gen más.
+	\paragraph{Ejemplo} Sea una población de $30$ individuos con $50$ características. Esto hace un total de $1500$ genes que pasarán por el proceso de mutación. $\lfloor \frac{1500}{1000} \rfloor = 1$, luego mutaremos un gen. Pero $1500 \equiv 500 mod(100)$, distinto de $0$, luego si se cumple \texttt{random()} $ < \frac{1500 mod(1000)}{1000} = 0.5$, modificamos un gen adicional.\\
 	La operación para mutar un bit de un determinado individuo es la ya conocida operación \texttt{flip} que nos hacía obtener los vecinos en las prácticas anteriores:
 	
 \begin{lstlisting}[mathescape=true]
@@ -339,22 +355,48 @@ BEGIN
 END
 \end{lstlisting}
 
-	Por tanto, el operador de mutación nos queda de la siguiente manera:
+	Por tanto, el operador de mutación nos queda de la siguiente manera: 
 	
 \begin{lstlisting}[mathescape=true]
 mutate(descendants_chromosomes, mutation_prob):
 BEGIN
-	total_num_genes $\leftarrow$ length(descendants_chromosomes)* 
-                                 length(descendants_chromosomes[0])
+   num_features = length(descendants_chromosomes[0]
+   total_genes $\leftarrow$ length(descendants_chromosomes)*num_features
                                  
-    num_gens_to_mutate $\leftarrow$ floor(total_num_genes*mutation_prob)
+   num_gens_to_mutate $\leftarrow$ floor(total_genes*mutation_prob)
     
+   IF random() < total_genes*mutation_prob-num_genes_to_mutate
+      num_gens_to_mutate $\leftarrow$ num_gens_to_mutate +1
     
-	
-	
+   chromosomes $\leftarrow$ {random(descendants_chromosomes), 
+                                    size = num_gens_to_mutate}
+   genes $\leftarrow$ {random({0,...,num_features-1}), 
+                                    size = num_gens_to_mutate}
+   FOR (chrom, gen) IN (chromosomes,genes):
+   
+      chrom $\leftarrow$ flip(chrom, gen)
+   
+   END
 END
 \end{lstlisting}
+
+
+\subsubsection{Torneo}
+
+Hay además una operación que se necesita para los dos esquemas y su sistema de elección, y es el torneo. Esta función se encarga de determinar cuál de dos individuos de la población es mejor y, por tanto cuál de ellos se reproducirá. En nuestro caso, entendemos que una solución es mejor que otra si tiene una mejor tasa de acierto o, en caso de tener la misma tasa de acierto, tiene seleccionadas menos características. Si se volviese a producir un empate, se devolvería uno de los dos candidatos al azar.
 	
+\begin{lstlisting}[mathescape=true]
+tournament(p_1, p_2):
+BEGIN
+   IF p_1 is better than p_2 THEN
+      RETURN p_1
+   ELSE IF p_2 is better than p_1 THEN
+      RETURN p_2
+   ELSE
+      RETURN random({p_1,p_2})
+END
+\end{lstlisting}
+
 
 \section{Estructura del método de búsqueda}
 

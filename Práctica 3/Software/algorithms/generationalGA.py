@@ -11,7 +11,7 @@ def selectionOp_Generational(population):
     parents = [tournament(population[sel_items[(2*i):(2*(i+1))]])
                for i in range(num_parents)]
 
-    return np.array(parents, dtype = genes_type)
+    return np.array(parents)
 
 def replaceOp_Generational(population, descendants):
     num_descendants = len(descendants)

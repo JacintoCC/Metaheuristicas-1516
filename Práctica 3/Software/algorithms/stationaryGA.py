@@ -8,7 +8,7 @@ def selectionOp_Stationary(population):
     p_1 = tournament(sel_items[:2])
     p_2 = tournament(sel_items[2:])
 
-    return np.array([population[p_1], population[p_2]], dtype = genes_type)
+    return np.array([population[p_1], population[p_2]])
 
 def replaceOp_Stationary(population, descendants):
     num_descendants = len(descendants)

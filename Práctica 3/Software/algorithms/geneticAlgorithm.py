@@ -3,10 +3,8 @@ import numpy as np
 from math import floor
 from BasicFunctions import *
 
-genes_type = [('chromosome',np.object),('score', np.float)]
-
 def twoPointsCrossOperator(parents):
-    num_features = len(parents[0])
+    num_features = len(parents[0]['chromosome'])
     num_descendants = len(parents)
     descendants = np.zeros((num_descendants,num_features), dtype=np.bool)
 
@@ -17,13 +15,17 @@ def twoPointsCrossOperator(parents):
         a, b = sorted(np.random.choice(np.arange(1,num_features),
                                        size=2, replace=False))
 
-        descendants[2*i]   = np.concatenate((parent1[:a],parent2[a:b],parent1[b:]))
-        descendants[2*i+1] = np.concatenate((parent2[:a],parent1[a:b],parent2[b:]))
+        descendants[2*i]   = np.concatenate((parent1['chromosome'][:a],
+                                             parent2['chromosome'][a:b],
+                                             parent1['chromosome'][b:]))
+        descendants[2*i+1] = np.concatenate((parent2['chromosome'][:a],
+                                             parent1['chromosome'][a:b],
+                                             parent2['chromosome'][b:]))
 
     return descendants
 
 def huxCrossOperator(parents):
-    num_features = len(parents[0])
+    num_features = len(parents[0]['chromosome'])
     num_descendants = len(parents)
     descendants = np.zeros((num_descendants,num_features), dtype=np.bool)
 
@@ -32,8 +34,8 @@ def huxCrossOperator(parents):
         parent2 = parents[2*i+1]
 
         for j in range(num_features):
-            gen_p1 = parent1[j]
-            gen_p2 = parent2[j]
+            gen_p1 = parent1['chromosome'][j]
+            gen_p2 = parent2['chromosome'][j]
             if gen_p1 == gen_p2:
                 descendants[2*i][j]   = gen_p1
                 descendants[2*i+1][j] = gen_p1
@@ -51,9 +53,9 @@ def getInitialPopulation(num_genes, num_chromosomes):
     return population
 
 def tournament(pair):
-    if pair[0]['value'] > pair[1]['value']:
+    if pair[0]['score'] > pair[1]['score']:
         return pair[0]
-    elif pair[0]['value'] < pair[1]['value']:
+    elif pair[0]['score'] < pair[1]['score']:
         return pair[1]
     else:
         if sum(pair[0]['chromosome']) < sum(pair[0]['chromosome']):
@@ -89,15 +91,17 @@ def geneticAlgorithm(train_data, train_categ, scorer,
     max_checks = 15000
     mutation_prob = 0.001
 
+    genes_type = [('chromosome',str(num_features)+'bool'),('score', np.float)]
+
     # Getting initial population
     pop_initial = getInitialPopulation(num_features, num_chromosomes)
     pop_scores = np.array([scorer(train_data[:,chromosome], train_categ)
                                   for chromosome in pop_initial])
 
-    population = np.array(zip(pop_initial, pop_scores), dtype = genes_type)
+    population = np.array([x for x in zip(pop_initial, pop_scores)], dtype = genes_type)
 
     num_checks = num_chromosomes
-    sort_population(population)
+    population.sort(order='score')
 
     while num_checks<max_checks:
         # Selección
@@ -111,10 +115,10 @@ def geneticAlgorithm(train_data, train_categ, scorer,
 
         # Evaluación
         desc_scores = [scorer(train_data[:,desc], train_categ)
-                       for desc in descendants]
-        num_checks += len(descendants)
+                       for desc in desc_chrom]
+        num_checks += len(desc_chrom)
 
-        descendants = np.array(zip(desc_chrom, desc_scores), dtype = genes_type)
+        descendants = np.array([x for x in zip(desc_chrom, desc_scores)], dtype = genes_type)
 
         # Reemplazamiento
         replaceOperator(population, descendants)

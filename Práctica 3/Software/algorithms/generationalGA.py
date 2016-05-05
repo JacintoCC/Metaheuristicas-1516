@@ -16,8 +16,9 @@ def selectionOp_Generational(population):
 def crossOp_Generational(algorithm):
     def crossOp(parents):
         num_features = len(parents[0]['chromosome'])
-        num_descendants = len(parents)
-        descendants = np.zeros((num_descendants,num_features), dtype=np.bool)
+        num_parents = len(parents)
+        genes_type = [('chromosome',str(num_features)+'bool'),('score', np.float)]
+        descendants = np.zeros(num_parents, dtype=genes_type)
 
         for i in range(round(0.35*num_parents)):
             parent1 = parents[2*i]
@@ -38,13 +39,13 @@ def replaceOp_Generational(population, descendants):
     best_ancestor = population[-1]
 
     if best_ancestor not in descendants:
-        descendants[descendants["scores"].argmin()] = best_ancestor
+        descendants[descendants['score'].argmin()] = best_ancestor
 
-    population = descendants
+    return descendants
 
 
 def generationalGA(train_data, train_categ, scorer):
     return geneticAlgorithm(train_data, train_categ, scorer,
                             selectionOp_Generational,
-                            crossOp_Generational(twoPointsCrossOperator),
+                            crossOp_Generational(huxCrossOperator),
                             mutate, replaceOp_Generational)

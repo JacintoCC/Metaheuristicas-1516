@@ -18,7 +18,7 @@ def twoPointsCrossOperator(p1, p2):
     return desc
 
 def huxCrossOperator(p1, p2):
-    num_features = len(p_1['chromosome'])
+    num_features = len(p1['chromosome'])
     genes_type = [('chromosome',str(num_features)+'bool'),('score', np.float)]
     desc = np.zeros(2, dtype=genes_type)
 
@@ -43,10 +43,10 @@ def getInitialPopulation(num_genes, num_chromosomes):
 
 def tournament(pair):
     if pair[0]['score'] > pair[1]['score'] or (pair[0]['score'] == pair[1]['score'] and
-            sum(pair[0]['chromosome']) < sum(pair[0]['chromosome']):
+                    sum(pair[0]['chromosome']) < sum(pair[0]['chromosome'])):
         return pair[0]
-    elif pair[1]['score'] > pair[0]['score'] or (pair['score'] == pair[1]['score'] and
-            sum(pair[1]['chromosome']) < sum(pair[0]['chromosome']):
+    elif pair[1]['score'] > pair[0]['score'] or (pair[0]['score'] == pair[1]['score'] and
+                    sum(pair[1]['chromosome']) < sum(pair[0]['chromosome'])):
         return pair[1]
     else:
         return pair[np.random.randint(2)]
@@ -95,6 +95,7 @@ def geneticAlgorithm(train_data, train_categ, scorer,
         # Selección
         selected_parents = selectionOperator(population)
 
+
         # Cruce
         descendants = crossOperator(selected_parents)
 
@@ -104,11 +105,11 @@ def geneticAlgorithm(train_data, train_categ, scorer,
         # Evaluación
         for desc in descendants:
             if desc['score'] == 0 :
-                desc['score'] = scorer(train_data[,desc['chromosome']],train_categ)
+                desc['score'] = scorer(train_data[:,desc['chromosome']],train_categ)
                 num_checks += 1
 
         # Reemplazamiento
-        replaceOperator(population, descendants)
+        population = replaceOperator(population, descendants)
 
         # Reordenación
         population.sort(order = 'score')

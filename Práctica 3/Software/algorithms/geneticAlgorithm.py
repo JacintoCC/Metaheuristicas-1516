@@ -1,50 +1,39 @@
 import numpy as np
-# from knnGPU.knnLooGPU import *
+from knnGPU.knnLooGPU import *
 from math import floor
 from BasicFunctions import *
 
-def twoPointsCrossOperator(parents):
-    num_features = len(parents[0]['chromosome'])
-    num_descendants = len(parents)
-    descendants = np.zeros((num_descendants,num_features), dtype=np.bool)
+def twoPointsCrossOperator(p1, p2):
+    num_features = len(p1['chromosome'])
+    genes_type = [('chromosome',str(num_features)+'bool'),('score', np.float)]
+    desc = np.zeros(2, dtype=genes_type)
 
-    for i in range(int(num_descendants//2)):
-        parent1 = parents[2*i]
-        parent2 = parents[2*i+1]
+    a, b = sorted(np.random.choice(np.arange(1,num_features),
+                                   size=2, replace=False))
+    desc[0]['chromosome'] = np.concatenate((p1['chromosome'][:a], p2['chromosome'][a:b],
+                             p1['chromosome'][b:]))
+    desc[1]['chromosome'] = np.concatenate((p2['chromosome'][:a], p1['chromosome'][a:b],
+                             p2['chromosome'][b:]))
 
-        a, b = sorted(np.random.choice(np.arange(1,num_features),
-                                       size=2, replace=False))
+    return desc
 
-        descendants[2*i]   = np.concatenate((parent1['chromosome'][:a],
-                                             parent2['chromosome'][a:b],
-                                             parent1['chromosome'][b:]))
-        descendants[2*i+1] = np.concatenate((parent2['chromosome'][:a],
-                                             parent1['chromosome'][a:b],
-                                             parent2['chromosome'][b:]))
+def huxCrossOperator(p1, p2):
+    num_features = len(p_1['chromosome'])
+    genes_type = [('chromosome',str(num_features)+'bool'),('score', np.float)]
+    desc = np.zeros(2, dtype=genes_type)
 
-    return descendants
+    for j in range(num_features):
+        gen_p1 = p1['chromosome'][j]
+        gen_p2 = p2['chromosome'][j]
+        if gen_p1 == gen_p2:
+            desc[0]['chromosome'][j] = gen_p1
+            desc[1]['chromosome'][j] = gen_p1
+        else:
+            gen = np.random.random() < 0.5
+            desc[0]['chromosome'][j] = gen
+            desc[1]['chromosome'][j] = not gen
 
-def huxCrossOperator(parents):
-    num_features = len(parents[0]['chromosome'])
-    num_descendants = len(parents)
-    descendants = np.zeros((num_descendants,num_features), dtype=np.bool)
-
-    for i in range(int(num_descendants//2)):
-        parent1 = parents[2*i]
-        parent2 = parents[2*i+1]
-
-        for j in range(num_features):
-            gen_p1 = parent1['chromosome'][j]
-            gen_p2 = parent2['chromosome'][j]
-            if gen_p1 == gen_p2:
-                descendants[2*i][j]   = gen_p1
-                descendants[2*i+1][j] = gen_p1
-            else:
-                gen = np.random.random() < 0.5
-                descendants[2*i][j]   = gen
-                descendants[2*i+1][j] = not gen
-
-    return descendants
+    return desc
 
 def getInitialPopulation(num_genes, num_chromosomes):
     population = np.array([ np.array(np.random.random(size = num_genes) < 0.5)
@@ -53,21 +42,18 @@ def getInitialPopulation(num_genes, num_chromosomes):
     return population
 
 def tournament(pair):
-    if pair[0]['score'] > pair[1]['score']:
+    if pair[0]['score'] > pair[1]['score'] or (pair[0]['score'] == pair[1]['score'] and
+            sum(pair[0]['chromosome']) < sum(pair[0]['chromosome']):
         return pair[0]
-    elif pair[0]['score'] < pair[1]['score']:
+    elif pair[1]['score'] > pair[0]['score'] or (pair['score'] == pair[1]['score'] and
+            sum(pair[1]['chromosome']) < sum(pair[0]['chromosome']):
         return pair[1]
     else:
-        if sum(pair[0]['chromosome']) < sum(pair[0]['chromosome']):
-            return pair[0]
-        elif sum(pair[0]['chromosome']) < sum(pair[0]['chromosome']):
-            return pair[1]
-        else:
-            return pair[np.random.randint(2)]
+        return pair[np.random.randint(2)]
 
 
 def mutate(descendants, mutation_prob):
-    num_genes = len(descendants[0])
+    num_genes = len(descendants[0]['chromosome'])
     num_descendants = len(descendants)
     num_total_genes = num_descendants*num_genes
     num_genes_to_mutate = floor(num_total_genes*mutation_prob)
@@ -79,7 +65,7 @@ def mutate(descendants, mutation_prob):
                                           size = num_genes_to_mutate)
 
     for gen in genes_to_mutate:
-        flip(descendants[gen//num_genes],gen%num_genes)
+        flip(descendants[gen//num_genes]['chromosome'],gen%num_genes)
 
 
 def geneticAlgorithm(train_data, train_categ, scorer,
@@ -96,7 +82,7 @@ def geneticAlgorithm(train_data, train_categ, scorer,
     # Getting initial population
     pop_initial = getInitialPopulation(num_features, num_chromosomes)
     pop_scores = np.array([scorer(train_data[:,chromosome], train_categ)
-                                  for chromosome in pop_initial])
+                                   for chromosome in pop_initial])
 
     population = np.array([x for x in zip(pop_initial, pop_scores)], dtype = genes_type)
 
@@ -108,17 +94,16 @@ def geneticAlgorithm(train_data, train_categ, scorer,
         selected_parents = selectionOperator(population)
 
         # Cruce
-        desc_chrom = crossOperator(selected_parents)
+        descendants = crossOperator(selected_parents)
 
         # Mutación
-        mutationOperator(desc_chrom, mutation_prob)
+        mutationOperator(descendants, mutation_prob)
 
         # Evaluación
-        desc_scores = [scorer(train_data[:,desc], train_categ)
-                       for desc in desc_chrom]
-        num_checks += len(desc_chrom)
-
-        descendants = np.array([x for x in zip(desc_chrom, desc_scores)], dtype = genes_type)
+        for desc in descendants:
+            if desc['score'] == 0 :
+                desc['score'] = scorer(train_data[,desc['chromosome']],train_categ)
+                num_checks += 1
 
         # Reemplazamiento
         replaceOperator(population, descendants)

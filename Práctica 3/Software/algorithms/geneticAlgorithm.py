@@ -65,7 +65,9 @@ def mutate(descendants, mutation_prob):
                                           size = num_genes_to_mutate)
 
     for gen in genes_to_mutate:
-        flip(descendants[gen//num_genes]['chromosome'],gen%num_genes)
+        individual = gen//num_genes
+        flip(descendants[individual]['chromosome'],gen%num_genes)
+        descendants[individual]['score']=0
 
 
 def geneticAlgorithm(train_data, train_categ, scorer,

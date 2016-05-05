@@ -93,10 +93,12 @@
 
 %Definición estilo en pseudocódigo
 \lstset{language=C,
-		otherkeywords={FOR,BEGIN,WHILE,IF,END,THEN,ELSE,DO,RETURN},
-        basicstyle=\ttfamily,
+		otherkeywords={FOR,BEGIN,WHILE,IF,END,THEN,ELSE,DO,RETURN,REPEAT},
+        basicstyle=\ttfamily\footnotesize,
         keywordstyle=\color{blue}\bfseries,
         stringstyle=\color{blue}\ttfamily,
+        frame=L,
+  		xleftmargin=\parindent,
         commentstyle=\color{green}\ttfamily,
                breaklines=true
 }
@@ -233,60 +235,7 @@ END
 
 \subsection{Operadores comunes}
 	
-	En esta práctica no sólo hay diversos operadores comunes, sino que el esquema general de los algoritmos es el mismo y las diferencias están, precisamente, en operadores concretos diferentes para cada algoritmo. Presentaré en primer lugar la estructura de los algoritmos genéticos implementados y posteriormente los operadores comunes de estos algoritmos.
-	
-\begin{lstlisting}[mathescape=true]
-geneticAlgorithm(data, categories, operators):
-BEGIN
-   MAX_CHECKS $\leftarrow$ 1500
-   MUTATION_PROBABILITY  $\leftarrow$ 0.001
-   
-
-   chromosomes $\leftarrow$ {{random{T,F}: size = num_features }:
-                                               size = 30}
-   scores $\leftarrow$ {score(data[chrom],categories): 
-                                     chrom $\in$ chromosomes} 
-   
-   population $\leftarrow$ concatenate( (chromosomes, scores), 
-                                              by columns)
-   sort(population, by scores)
-   
-   num_checks $\leftarrow$ 30
-   
-   WHILE num_checks < MAX_CHECKS DO
-   
-      selected_parents $\leftarrow$ selectionOperator(population)
-      
-      descendants_chrom $\leftarrow$  crossOperator(selected_parents)
-      descendants_chrom $\leftarrow$ mutationOperator(descendants_chrom,
-                                         MUTATION_PROBABILITY)
-                                                      
-      descendants_scores $\leftarrow$ {score(data[chrom],categories): 
-                                    chrom $\in$ descendants_chrom} 
-                                           
-      descendants $\leftarrow$ concatenate((descendants_chrom,
-                                          descendants_scores), 
-                                                  by columns)
-      num_checks += length(descendants)
-                                                
-      replaceOperator(population, descendants)
-      sort(population, by scores)
-   END
-END
-\end{lstlisting}	
-
-	Esta estructura básica hará más fácil la construcción de algoritmos evolutivos, pues sólo tendremos que modificar los operadores de selección, cruce, mutación y reemplazamiento. El funcionamiento será el visto en clase: en primer lugar se genera una población aleatoria, evaluamos y ordenamos con respecto a esta puntuación obtenida. Entonces, mientras el número de evaluaciones realizados sea menor que el máximo establecido ($15000$ en nuestro caso), se realiza el siguiente bucle:
-	
-\begin{enumerate}[i]
-\item Se seleccionan unos padres de la población con \texttt{selectionOperator}.
-\item Estos padres se reproducen mediante \texttt{crossOperator}
-\item Los cromosomas obtenidos se someten a una mutación aleatoria usando \texttt{mutation}-\texttt{Operator}
-\item Se evalúan los hijos.
-\item Se produce un reemplazo en la generación.
-\item Se reordena la población.
-\end{enumerate}
-
-	Finalmente, se devuelve el mejor individuo de la población existente al final de las evaluaciones. Para los dos algoritmos se comparten los operadores de cruce y mutación:
+	Para los dos algoritmos se comparten los operadores de cruce y mutación:
 	
 \subsubsection{Operador de cruce}
 
@@ -297,15 +246,12 @@ END
 \begin{lstlisting}[mathescape=true]
 twoPointsCrossOperator( parents ):
 BEGIN
-   desc_chromosomes $\leftarrow$ array(type = bool vector,
-                                     length = length(parents))
+   desc_chromosomes $\leftarrow$ array(type = bool vector, length = length(parents))
    FOR i IN {0,2,4,...,length(parents)-2} BEGIN
       parent_1 $\leftarrow$ parents[i]
       parent_2 $\leftarrow$ parents[i+1]
       
-      a,b $\leftarrow$ {random{1,$\dots$,num_features-1}, size = 2,
-                                               replace=False}
-      
+      a,b $\leftarrow$ {random{1,$\dots$,num_features-1}, size = 2,replace=False}
       desc[i] $\leftarrow$ concatenate(parent_$1_0$,$\dots$,parent_$1_{a-1}$,
                              parent_$2_a$,$\dots$,parent_$2_{b-1}$,
                              parent_$1_b$,$\dots$,parent_$2_{num\_features-1}$)
@@ -327,8 +273,7 @@ BEGIN
       parent_1 $\leftarrow$ parents[i]
       parent_2 $\leftarrow$ parents[i+1]
       
-      a,b $\leftarrow$ random{1,$\dots$,num_features-1, size = 2,
-                                              replace=False}
+      a,b $\leftarrow$ random{1,$\dots$,num_features-1, size = 2, replace=False}
       
       desc[i] $\leftarrow$ concatenate(parent_$1_0$,$\dots$,parent_$1_{a-1}$,
                              parent_$2_a$,$\dots$,parent_$2_{b-1}$,
@@ -368,14 +313,10 @@ BEGIN
    IF random() < total_genes*mutation_prob-num_genes_to_mutate
       num_gens_to_mutate $\leftarrow$ num_gens_to_mutate +1
     
-   chromosomes $\leftarrow$ {random(descendants_chromosomes), 
-                                    size = num_gens_to_mutate}
-   genes $\leftarrow$ {random({0,...,num_features-1}), 
-                                    size = num_gens_to_mutate}
+   chromosomes $\leftarrow$ {random(descendants_chromosomes), size = num_gens_to_mutate}
+   genes $\leftarrow$ {random({0,...,num_features-1}),size = num_gens_to_mutate}
    FOR (chrom, gen) IN (chromosomes,genes):
-   
       chrom $\leftarrow$ flip(chrom, gen)
-   
    END
 END
 \end{lstlisting}
@@ -400,11 +341,80 @@ END
 
 \section{Estructura del método de búsqueda}
 
+En esta práctica no sólo hay diversos operadores comunes, sino que el esquema general de los algoritmos es el mismo y las diferencias están, precisamente, en operadores concretos diferentes para cada algoritmo. Presentaré en primer lugar la estructura de los algoritmos genéticos implementados y posteriormente los operadores específicos de estos algoritmos.
+	
+\begin{lstlisting}[mathescape=true]
+geneticAlgorithm(data, categories, operators):
+BEGIN
+   MAX_CHECKS $\leftarrow$ 1500
+   MUTATION_PROBABILITY  $\leftarrow$ 0.001
+   
+   chromosomes $\leftarrow$ {{random{T,F}: size = num_features }:size = 30}
+   scores $\leftarrow$ {score(data[chrom],categories): chrom $\in$ chromosomes} 
+   
+   population $\leftarrow$ concatenate( (chromosomes, scores), by columns)
+   sort(population, by scores)
+   
+   num_checks $\leftarrow$ 30
+   
+   WHILE num_checks < MAX_CHECKS DO
+   
+      selected_parents $\leftarrow$ selectionOperator(population)
+      
+      descendants_chrom $\leftarrow$  crossOperator(selected_parents)
+      descendants_chrom $\leftarrow$ mutationOperator(descendants_chrom, MUTATION_PROBABILITY)
+                                                      
+      descendants_scores $\leftarrow$ {score(data[chrom],categories): chrom $\in$ descendants_chrom} 
+                                           
+      descendants $\leftarrow$ concatenate((descendants_chrom,descendants_scores),  by columns)
+      num_checks $\leftarrow$ num_checks+length(descendants)
+                                                
+      replaceOperator(population, descendants)
+      sort(population, by scores)
+   END
+END
+\end{lstlisting}	
+
+	Esta estructura básica hará más fácil la construcción de algoritmos evolutivos, pues sólo tendremos que modificar los operadores de selección, cruce, mutación y reemplazamiento. El funcionamiento será el visto en clase: en primer lugar se genera una población aleatoria, evaluamos y ordenamos con respecto a esta puntuación obtenida. Entonces, mientras el número de evaluaciones realizados sea menor que el máximo establecido ($15000$ en nuestro caso), se realiza el siguiente bucle:
+	
+\begin{enumerate}[i]
+\item Se seleccionan unos padres de la población con \texttt{selectionOperator}.
+\item Estos padres se reproducen mediante \texttt{crossOperator}
+\item Los cromosomas obtenidos se someten a una mutación aleatoria usando \texttt{mutation}-\texttt{Operator}
+\item Se evalúan los hijos.
+\item Se produce un reemplazo en la generación.
+\item Se reordena la población.
+\end{enumerate}
+
+	Finalmente, se devuelve el mejor individuo de la población existente al final de las evaluaciones. 
+
 \subsection{Algoritmo Genético Generacional}
 
+\subsubsection{Operador de selección}
+
+	El operador de selección para el esquema generacional consiste en seleccionar aleatoriamente elementos de la población hasta obtener tantas parejas como elementos de la población y realizar el torneo entre estas parejas, quedándose con los vencedores.
+	
+\begin{lstlisting}[mathescape=true]
+selectionOperator_generational(population):
+BEGIN
+   tourn_cand $\leftarrow$ {random(population): size = 2 length(population)}
+   parents $\leftarrow$ {tournament(tourn_cand[i], tourn_cand[i+1]) : i = 0,2,...,2*(length(population)-1)}
+   
+   RETURN parents
+END
+\end{lstlisting}
+
+\subsubsection{Operador de reemplazamiento}
+
+	En el operador de reemplazamiento, simplemente se intercambia la población actual por la de los descendientes, aunque como se mantiene el elitismo, se reemplaza al peor individuo de la población de descendientes por el mejor de la población anterior si no perteneciere a los descendientes.
+	
+	
 
 \subsection{Algoritmo Genético Estacionario}
 
+\subsubsection{Operador de selección}
+
+\subsubsection{Operador de reemplazamiento}
 	
 \section{Algoritmo de comparación}
 
@@ -416,7 +426,7 @@ greedySFS(data, categories) BEGIN
    current_value $\leftarrow$ getValue(data, categories, solution)
    
    REPEAT
-      neighbours $\leftarrow$ {flip(solution,i): i in characteristics}
+      neighbours $\leftarrow$ {flip(solution,i): i $\in$ characteristics}
    
       best_value $\leftarrow$ $\max_{\texttt{neighbours}}$ getValue(data, categories, $\cdot$)
       
@@ -473,7 +483,7 @@ Los casos del problema planteados son tres, cada uno de ellos asociado a una bas
 \begin{itemize}
 \item WDBC: Base de datos con los atributos estimados a partir de una imagen de una aspiración de una masa en la mama. Tiene 569 ejemplos, 30 atributos y debemos clasificar cada individuo en dos valores.
 \item Movement Libras: Base de datos con la representación de los movimientos de la mano en el lenguaje de signos LIBRAS. Tiene 360 ejemplos y consta de 91 atributos.
-\item Arrhythmia: Contiene datos de pacientes durante la presencia y ausencia de arritmia cardíaca. Tiene 386 ejemplos y 254 atributos para categorizar en 5 clases. Reduje el número de características eliminando las columnas que tuvieran el mismo valor para todos los datos. Hice esto cuando tenía en la búsqueda local que se aceptasen soluciones iguales pero con menor número de características. Como he comentado, tardaba mucho así que pensé que en \texttt{Arrhythmia}, debido al gran número de datos y columnas, para cada búsqueda se gastaba demasiado tiempo en descartar estas 24 características cuando estuviesen seleccionadas. Sin embargo, debido a que buena parte del resto de columnas tienen valores parecidos para muchos de los elementos, el tiempo seguía siendo excesivo, con lo que descarté esa modificación de la búsqueda local.
+\item Arrhythmia: Contiene datos de pacientes durante la presencia y ausencia de arritmia cardíaca. Tiene 386 ejemplos y 254 atributos para categorizar en 5 clases. He reducido el número de características eliminando las columnas que tuvieran el mismo valor para todos los datos. Está explicado en la práctica 2 que tardaba excesivamente en la búsqueda local si se intentaba bajar el número de características deseleccionando aquellas que no influyesen en la tasa de acierto.
 \end{itemize}
 
 

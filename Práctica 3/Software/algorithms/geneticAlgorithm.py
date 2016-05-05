@@ -95,7 +95,6 @@ def geneticAlgorithm(train_data, train_categ, scorer,
         # Selección
         selected_parents = selectionOperator(population)
 
-
         # Cruce
         descendants = crossOperator(selected_parents)
 

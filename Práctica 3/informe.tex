@@ -93,14 +93,14 @@
 
 %Definición estilo en pseudocódigo
 \lstset{language=C,
-		otherkeywords={FOR,BEGIN,WHILE,IF,END,THEN,ELSE,DO,RETURN,REPEAT},
+		otherkeywords={FOR,BEGIN,WHILE,IF,NOT,END,THEN,ELSE,DO,RETURN,REPEAT},
         basicstyle=\ttfamily\footnotesize,
         keywordstyle=\color{blue}\bfseries,
         stringstyle=\color{blue}\ttfamily,
         frame=L,
   		xleftmargin=\parindent,
         commentstyle=\color{green}\ttfamily,
-               breaklines=true
+        breaklines=true
 }
 
 \begin{document}
@@ -235,27 +235,28 @@ END
 
 \subsection{Operadores comunes}
 	
-	Para los dos algoritmos se comparten los operadores de cruce y mutación:
+	Para los dos algoritmos se comparte el operador de mutación y también, en cierta medida, el operador de cruce:
 	
 \subsubsection{Operador de cruce}
+
+	El operador de cruce de cada algoritmo se diferencia en que en el esquema estacionario únicamente se reproducen dos de los padres, mientras que en el esquema generacional, se seleccionan tantos padres como individuos tenga la población (se dará el caso con frecuencia de que un individuo se reproduzca más veces que otro). Sin embargo, sólo se cruzarán el $70\%$ de ellos, con lo que el operador de cruce para el caso generacional cruza únicamente el $70\%$ primero del vector de padres a cruzar, manteniendo el $30\%$ restante como estaba. 
 
 \paragraph{Operador de cruce de dos puntos}
 
 	El operador de cruce que se indica en la práctica para hacer es el cruce clásico en dos puntos. Para este cruce, dados dos padres tomamos dos posiciones aleatorias en dos vectores e intercambiamos la parte central, obteniendo a los hijos:
 	
 \begin{lstlisting}[mathescape=true]
-twoPointsCrossOperator( parents ):
+twoPointsCrossOperator( parent_1, parent_2 ):
 BEGIN
-   desc_chromosomes $\leftarrow$ array(type = bool vector, length = length(parents))
-   FOR i IN {0,2,4,...,length(parents)-2} BEGIN
-      parent_1 $\leftarrow$ parents[i]
-      parent_2 $\leftarrow$ parents[i+1]
-      
-      a,b $\leftarrow$ {random{1,$\dots$,num_features-1}, size = 2,replace=False}
-      desc[i] $\leftarrow$ concatenate(parent_$1_0$,$\dots$,parent_$1_{a-1}$,
-                             parent_$2_a$,$\dots$,parent_$2_{b-1}$,
-                             parent_$1_b$,$\dots$,parent_$2_{num\_features-1}$)
-   END
+   a,b $\leftarrow$ {random{1,$\dots$,num_features-1}, size = 2,replace=False}
+
+   desc_1 $\leftarrow$ concatenate(parent_$1_0$,$\dots$,parent_$1_{a-1}$,
+                         parent_$2_a$,$\dots$,parent_$2_{b-1}$,
+                         parent_$1_b$,$\dots$,parent_$1_{num\_features-1}$)
+   desc_2 $\leftarrow$ concatenate(parent_$2_0$,$\dots$,parent_$2_{a-1}$,
+                         parent_$1_a$,$\dots$,parent_$1_{b-1}$,
+                         parent_$2_b$,$\dots$,parent_$2_{num\_features-1}$)
+   RETURN desc_1, desc_2
 END
 
 \end{lstlisting}
@@ -265,22 +266,20 @@ END
 	He implementado también una modificación sobre el \textit{Half Cross Uniform} (HUX) consistente en, dados dos padres, asignar a cada gen del hijo el valor del gen de los padres si éste coincide en ambos; si es distinto, asignamos al gen de cada uno de los hijos los valores \texttt{True} o \texttt{False} aleatoriamente. Esto significa que, para un gen en el que los padres tienen distintos valores, un hijo (aleatoriamente en cada gen) recibirá \texttt{True} y el otro \texttt{False}. Así maximizamos la distancia \textit{hamming} entre los hijos, obteniendo mayor diversidad. 
 	
 \begin{lstlisting}[mathescape=true]
-twoPointsCrossOperator( parents ):
+huxCrossOperator( parent_1, parent_2 ):
 BEGIN
-   desc_chromosomes $\leftarrow$ array(type = bool vector,
-                                      length = length(parents)
-   FOR i IN {0,2,4,...,length(parents)-2} BEGIN
-      parent_1 $\leftarrow$ parents[i]
-      parent_2 $\leftarrow$ parents[i+1]
-      
-      a,b $\leftarrow$ random{1,$\dots$,num_features-1, size = 2, replace=False}
-      
-      desc[i] $\leftarrow$ concatenate(parent_$1_0$,$\dots$,parent_$1_{a-1}$,
-                             parent_$2_a$,$\dots$,parent_$2_{b-1}$,
-                             parent_$1_b$,$\dots$,parent_$2_{num\_features-1}$)
+   FOR j IN {1,..., num_features} :
+      IF parent_1[j] == parent_2[j] THEN
+         desc_1[j] $\leftarrow$ parent_1[j]
+         desc_2[j] $\leftarrow$ parent_1[j]
+      ELSE
+         gen $\leftarrow$ random({True,False})
+         desc_1[j] $\leftarrow$ gen     
+         desc_2[j] $\leftarrow$ not gen
    END
+   
+   RETURN desc_1, desc_2
 END
-
 \end{lstlisting}
 	
 	
@@ -303,23 +302,27 @@ END
 	Por tanto, el operador de mutación nos queda de la siguiente manera: 
 	
 \begin{lstlisting}[mathescape=true]
-mutate(descendants_chromosomes, mutation_prob):
+mutate(descendants, mutation_prob):
 BEGIN
-   num_features = length(descendants_chromosomes[0]
-   total_genes $\leftarrow$ length(descendants_chromosomes)*num_features
+   total_genes $\leftarrow$ length(descendants)*num_features
                                  
    num_gens_to_mutate $\leftarrow$ floor(total_genes*mutation_prob)
     
    IF random() < total_genes*mutation_prob-num_genes_to_mutate
       num_gens_to_mutate $\leftarrow$ num_gens_to_mutate +1
     
-   chromosomes $\leftarrow$ {random(descendants_chromosomes), size = num_gens_to_mutate}
+   individ $\leftarrow$ {random(descendants), size = num_gens_to_mutate}
    genes $\leftarrow$ {random({0,...,num_features-1}),size = num_gens_to_mutate}
-   FOR (chrom, gen) IN (chromosomes,genes):
-      chrom $\leftarrow$ flip(chrom, gen)
+   FOR (individ, gen) IN (individ,genes):
+      individ[chromosome] $\leftarrow$ flip(individ[chromosome], gen)
+      individ[score] $\leftarrow$ 0
    END
+   
+   RETURN descendants
 END
 \end{lstlisting}
+
+	Ajustando el valor del individuo mutado nos aseguramos que si el individuo mutado pertenecía a la población (estaba en el $30\%$ de la selección de padres que no se ha cruzado) se vuelve a evaluar y nos ahorramos hacerlo si el individuo no hubiera mutado.
 
 
 \subsubsection{Torneo}
@@ -361,14 +364,12 @@ BEGIN
    
       selected_parents $\leftarrow$ selectionOperator(population)
       
-      descendants_chrom $\leftarrow$  crossOperator(selected_parents)
-      descendants_chrom $\leftarrow$ mutationOperator(descendants_chrom, MUTATION_PROBABILITY)
+      descendants $\leftarrow$  crossOperator(selected_parents)
+      descendants $\leftarrow$ mutationOperator(descendants, MUTATION_PROBABILITY)
                                                       
-      descendants_scores $\leftarrow$ {score(data[chrom],categories): chrom $\in$ descendants_chrom} 
-                                           
-      descendants $\leftarrow$ concatenate((descendants_chrom,descendants_scores),  by columns)
-      num_checks $\leftarrow$ num_checks+length(descendants)
-                                                
+      FOR desc IN descendants not evaluated:
+         score(data[desc],categories)
+                            
       replaceOperator(population, descendants)
       sort(population, by scores)
    END
@@ -408,13 +409,40 @@ END
 
 	En el operador de reemplazamiento, simplemente se intercambia la población actual por la de los descendientes, aunque como se mantiene el elitismo, se reemplaza al peor individuo de la población de descendientes por el mejor de la población anterior si no perteneciere a los descendientes.
 	
-	
+\begin{lstlisting}[mathescape=true]
+replaceOperator_generational(population, descendants):
+BEGIN
+   best $\leftarrow$ first(population)
+   IF best NOT IN descendants THEN
+      last(descendants) = best
+   
+   RETURN descendants
+END
+\end{lstlisting}
+
+Para simplificar la lectura en el código y minimizar el número de operaciones, sobre todo usando los vectores de \texttt{numpy}, el orden es de menor a mayor, luego el mejor individuo se encuentra en la última posición. En el pseudocódigo se supone que los vectores están ordenados de mayor a menor tasa de aprendizaje.
 
 \subsection{Algoritmo Genético Estacionario}
 
 \subsubsection{Operador de selección}
 
+El operador de selección en el esquema estacionario es el mismo que para el generacional, con la salvedad de que los padres seleccionados son únicamente 2, con lo que necesitamos 4 elementos que participen en sendos torneos.
+
 \subsubsection{Operador de reemplazamiento}
+	
+	El operador de reemplazamiento sí es diferente al del esquema generacional. Al tener únicamente dos descendientes en cada iteración, no podríamos sustituir enteramente la población por la siguiente generación, sino que seleccionamos los dos individuos de la población, los comparamos con los dos descendientes generados y escogemos los dos mejores de estos cuatro elementos.
+	
+\begin{lstlisting}[mathescape=true]
+replaceOperator_stationary(population, descendants):
+BEGIN
+   replacement $\leftarrow$ concatenate(last(population, size=2), descendants)
+   
+   sort(replacement, by 'score')
+   last(population, size = 2)  $\leftarrow$ first(replacement, size = 2)
+   
+   RETURN population
+END
+\end{lstlisting}	
 	
 \section{Algoritmo de comparación}
 

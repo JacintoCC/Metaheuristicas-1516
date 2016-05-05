@@ -29,7 +29,7 @@ def crossOp_Stationary(algorithm):
 
 def replaceOp_Stationary(population, descendants):
     num_descendants = len(descendants)
-    replacement = np.concatenate((population[-num_descendants:],descendants))
+    replacement = np.concatenate((population[:num_descendants],descendants))
 
     replacement.sort(order = 'score')
     population[:num_descendants] = replacement[-num_descendants:]

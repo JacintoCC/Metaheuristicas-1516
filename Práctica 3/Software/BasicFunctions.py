@@ -76,7 +76,7 @@ def makePartitions(data, categories, random, num_partitions = 2):
 
 # Función para actualizar el fichero .csv con las medias
 def meansToCSV(name_alg, name_db, mean_results):
-    alg_to_index = {'KNN':1,'SFS':2, 'BMB':3,'GRASP':4,'ILS':5}
+    alg_to_index = {'KNN':1,'SFS':2, 'AGG':3,'AGE':4}
     db_to_index = {'w':2,'l':6, 'a':10}
 
     alg_index = alg_to_index[name_alg]

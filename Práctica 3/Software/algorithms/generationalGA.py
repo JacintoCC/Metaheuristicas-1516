@@ -49,3 +49,9 @@ def generationalGA(train_data, train_categ, scorer):
                             selectionOp_Generational,
                             crossOp_Generational(twoPointsCrossOperator),
                             mutate, replaceOp_Generational)
+
+def generationalGA_hux(train_data, train_categ, scorer):
+    return geneticAlgorithm(train_data, train_categ, scorer,
+                            selectionOp_Generational,
+                            crossOp_Generational(huxCrossOperator),
+                            mutate, replaceOp_Generational)

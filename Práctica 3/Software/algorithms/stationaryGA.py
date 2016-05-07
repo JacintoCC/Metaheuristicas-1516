@@ -42,3 +42,9 @@ def stationaryGA(train_data, train_categ, scorer):
                             selectionOp_Stationary,
                             crossOp_Stationary(twoPointsCrossOperator),
                             mutate, replaceOp_Stationary)
+
+def stationaryGA_hux(train_data, train_categ, scorer):
+    return geneticAlgorithm(train_data, train_categ, scorer,
+                            selectionOp_Stationary,
+                            crossOp_Stationary(huxCrossOperator),
+                            mutate, replaceOp_Stationary)

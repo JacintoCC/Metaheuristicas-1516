@@ -12,8 +12,8 @@ from BasicFunctions import *
     # Importación de los algoritmos utilizados en la práctica
 from algorithms.kNNSolution import kNNSolution
 from algorithms.greedySFS import greedySFS
-from algorithms.generationalGA import generationalGA
-from algorithms.stationaryGA import stationaryGA
+from algorithms.generationalGA import generationalGA, generationalGA_hux
+from algorithms.stationaryGA import stationaryGA, stationaryGA_hux
 
     # Importación de la clase para realizar el score de una solución
 from knnGPU.knnLooGPU import knnLooGPU
@@ -119,15 +119,15 @@ def main(args):
     database_name = 'Datos/'
     db_options = {'W': 'wdbc', 'L': 'movement_libras', 'A':'arrhythmia'}
     alg_options = {'K': kNNSolution, 'S': greedySFS, 'E': stationaryGA,
-                   'G':generationalGA}
-    alg_names = {'K': "KNN", 'S': "SFS", 'E': "AGE", 'G':"AGG"}
+                   'G':generationalGA, 'EH':stationaryGA_hux, 'GH':generationalGA_hux}
+    alg_names = {'K': "KNN", 'S': "SFS", 'E': "AGE", 'G':"AGG", 'EH':"AGEH", 'GH': "AGGH"}
     class_row = {'W': 0, 'L': 90, 'A':253}
     bytes_to_int = {b'B': 0, b'M': 1}
 
     parser = argparse.ArgumentParser(description='')
     parser.add_argument('DB', choices=['W','L','A'],
                        help='DB to use. W -> WDBC;   L -> Libras;   A -> Arrhythmia')
-    parser.add_argument('-a', choices=['K','S','E','G'],
+    parser.add_argument('-a', choices=['K','S','E','G','EH','GH'],
                         help='Algorithm to use. K -> kNN; S -> greedy SFS; E -> AGE; G -> AGG',
                         default='K')
     parser.add_argument('-write', type=bool,

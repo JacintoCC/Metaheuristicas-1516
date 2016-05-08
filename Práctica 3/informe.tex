@@ -125,6 +125,15 @@
 \pgfplotstableread[col sep=comma]{Software/Resultados/lAGE.csv}\datalAGE
 \pgfplotstableread[col sep=comma]{Software/Resultados/aAGE.csv}\dataaAGE
 
+% Tablas AGG-H
+\pgfplotstableread[col sep=comma]{Software/Resultados/wAGGH.csv}\datawAGGH
+\pgfplotstableread[col sep=comma]{Software/Resultados/lAGGH.csv}\datalAGGH
+\pgfplotstableread[col sep=comma]{Software/Resultados/aAGGH.csv}\dataaAGGH
+
+% Tablas AGE-H
+\pgfplotstableread[col sep=comma]{Software/Resultados/wAGEH.csv}\datawAGEH
+\pgfplotstableread[col sep=comma]{Software/Resultados/lAGEH.csv}\datalAGEH
+\pgfplotstableread[col sep=comma]{Software/Resultados/aAGEH.csv}\dataaAGEH
 
 % Tabla Resumen
 \pgfplotstableread[col sep=comma]{Software/Resultados/results.csv}\dataGlobal
@@ -407,7 +416,7 @@ END
 
 \subsubsection{Operador de reemplazamiento}
 
-	En el operador de reemplazamiento, simplemente se intercambia la población actual por la de los descendientes, aunque como se mantiene el elitismo, se reemplaza al peor individuo de la población de descendientes por el mejor de la población anterior si no perteneciere a los descendientes.
+	En el operador de reemplazamiento, simplemente se intercambia la población actual por la de los descendientes, aunque como se da el elitismo, se reemplaza al peor individuo de la población de descendientes por el mejor de la población anterior si el mejor individuo de los descendientes no tuviese una mejor puntuación:
 	
 \begin{lstlisting}[mathescape=true]
 replaceOperator_generational(population, descendants):
@@ -487,7 +496,7 @@ La salida de cada ejecución (10 iteraciones de un algoritmo con una base de dat
 Los parámetros que acepta el programa son:
 \begin{itemize}
 \item Base de datos: Será una letra $\texttt{W,L,A}$ que representa cada una de las bases de datos a utilizar. Este parámetro es el único obligatorio.
-\item Algoritmo utilizado: Por defecto es el KNN. Para introducir uno distinto, se usa $\texttt{-a}$ seguido de una letra entre \texttt{K,S,G,E} que se corresponden con KNN, \textit{greedy} SFS, algoritmo genético generacional y algoritmo genético estacionario, respectivamente.
+\item Algoritmo utilizado: Por defecto es el KNN. Para introducir uno distinto, se usa $\texttt{-a}$ seguido de una letra entre \texttt{K,S,G,E,GH,EH} que se corresponden con KNN, \textit{greedy} SFS, algoritmo genético generacional y algoritmo genético estacionario, generacional con cruce HUX y estacionario con cruce HUX, respectivamente.
 \item Semilla. Para incluir una semilla, se añade $\texttt{-seed}$ seguido del número que usaremos como semilla. Por defecto es 3141592.
 \item Salida por pantalla o a fichero. Se utiliza con el parámetro opcional \texttt{-write} para escribir en un fichero en una carpeta llamada \texttt{Resultados}. El nombre del fichero será la primera letra de la base de datos utilizada seguida por las iniciales del algoritmo. Incluye también la media, el mínimo, el máximo y la desviación típica para cada columna.
 \item \texttt{-h} o \texttt{--help} para mostrar la ayuda y cómo se introducen los parámetros.
@@ -497,8 +506,8 @@ Por tanto, la ejecución del programa se hará de la siguiente manera:
 \[ \texttt{python Practica3.py base\_de\_datos [-a algoritmo -seed semilla -write T/F ]} \]
 Si por ejemplo queremos lanzar la base de datos de \texttt{WDBC} con el AGE, semilla 123456 y que los resultados se muestren por pantalla, escribimos
 \[ \texttt{python Practica3.py W -a E -seed 123456}\]
-Si optamos por la base de datos \texttt{Arrhythmia} con el AGG y guardar el resultado en un fichero:
-\[ \texttt{python Practica3.py A -a G -write True}\]
+Si optamos por la base de datos \texttt{Arrhythmia} con el AGG con el cruce HUX y guardar el resultado en un fichero:
+\[ \texttt{python Practica3.py A -a GH -write True}\]
 Para mostrar la introducción de parámetros:
 \[ \texttt{python Practica3.py --help}\]
 
@@ -523,7 +532,7 @@ Los casos del problema planteados son tres, cada uno de ellos asociado a una bas
 % Salida por pantalla
 \maketable{\dataKNN}
 
-Los datos y su análisis son los mismos que en la práctica anterior.
+En este caso el análisis es el mismo que en las prácticas anteriores. Con el \texttt{KNN} se ve cómo es la BD en general y qué tasas de acierto se obtiene seleccionando todas las categorías. Las diferentes iteraciones y sus resultados no son más que para particiones distintas, pues la solución es la misma para todas las ejecuciones del algoritmo. Se ve que en \texttt{WDBC} y \texttt{Arrhythmia} se obtienen porcentajes similares para la clasificación dentro de la muestra y fuera, como cabría esperar, pues las particiones se hacen equilibradamente, y sin embargo en \texttt{Libras} el porcentaje de acierto fuera de la muestra es superior. Esto se puede deber a que hay un gran número de clases y no tantos representantes de esas clases como en las dos primeras bases de datos.
 
 \subsubsection{SFS}
 
@@ -533,7 +542,7 @@ Los datos y su análisis son los mismos que en la práctica anterior.
 % Salida por pantalla
 \maketable{\dataSFS}
 
-Los datos y su análisis son los mismos que en la práctica anterior.
+Para el \texttt{SFS} se obtienen buenos resultados comparándolos con el \texttt{KNN}, especialmente en \texttt{Arrhythmia}, debido a que al haber muchas características y relativamente pocas clases, seleccionando bien unas pocas características se obtienen muy buenos resultados, introduciendo ruido con otras.
 
 \subsubsection{Algoritmo genético generacional}
 % Tablas Resumen AGG
@@ -542,14 +551,34 @@ Los datos y su análisis son los mismos que en la práctica anterior.
 % Salida por pantalla
 \maketable{\dataAGG}
 
+Los mejores resultados con respecto a los algoritmos de comparación (\texttt{KNN} y \texttt{SFS}) se obtienen en las bases de datos \texttt{WDBC} y \texttt{Libras}, en cambio en \texttt{Arrhythmia} los mejores resultados siguen siendo los del algoritmo \texttt{SFS} debido a la importancia de la reducción de características comentada en el apartado anterior. Si comparamos los resultados con los obtenidos en la práctica 2, tampoco sale bien parado pues los resultados son inferiores, especialmente en las bases de datos de mayor tamaño. Sin embargo, el tiempo en \texttt{Arrhythmia} es menor que \texttt{BMB} e \texttt{ILS} obteniendo los tres algoritmos resultados similares, con lo que cabe pensar que los resultados podrían mejorar si una parte de las evaluaciones se dedicaran a hacer búsqueda local. 
 
-\subsubsection{Algoritmo genético generacional}
+\subsubsection{Algoritmo genético estacionario}
 % Tablas Resumen AGE
 \makeresume{\dataAGE}{\datawAGE}{\datalAGE}{\dataaAGE}
 
 % Salida por pantalla
 \maketable{\dataAGE}
 
+Si comparamos con los resultados del algortimo genético con el esquema generacional los resultados son similares, aunque no es así en el tiempo, siendo superior en el esquema estacionario. Esto se puede deber a que se hacen muchas reordenaciones cuando sólo se han introducido dos elementos en cada generación, por lo que podríamos pensar en cambiar el algoritmo de ordenación y también en aumentar la presión para que se introduzcan más elementos en cada generación.
+
+\subsubsection{Algoritmo genético generacional - cruce HUX}
+% Tablas Resumen AGG-H
+\makeresume{\dataAGGH}{\datawAGGH}{\datalAGGH}{\dataaAGGH}
+
+% Salida por pantalla
+\maketable{\dataAGGH}
+
+Si comparamos los resultados de este cruce con los del mismo algoritmo y esquema, pero con cruce por dos puntos, vemos que los resultados obtenidos por el cruce uniforme son mejores. Para este problema, donde lo importante es seleccionar bien qué características son las importantes, esto se realiza mejor si los hijos adquieren las características relevantes de los padres (aquellas que se repiten en ambos y que han dado buenos resultados) y tratan de distanciarse (usando la aleatoriedad y la asignación) de sus hermanos. En cambio para el cruce por dos puntos los hijos se parecen en exceso a sus padres especialemente al final, cuando hay menos diversidad.
+
+\subsubsection{Algoritmo genético estacionario - cruce HUX}
+% Tablas Resumen AGE-H
+\makeresume{\dataAGEH}{\datawAGEH}{\datalAGEH}{\dataaAGEH}
+
+% Salida por pantalla
+\maketable{\dataAGEH}
+
+En esta ocasión la diferencia al introducir el cruce uniforme es un poco mayor, también debido a que los resultados del esquema estacionario eran un poco inferiores. También hay que pensar que en este esquema se van introduciendo más lentamente nuevos hijos, con lo que tendrá mayor impacto que el cruce se haga de manera eficiente.
 
 \subsubsection{Comparación}
  
@@ -594,7 +623,7 @@ Los datos y su análisis son los mismos que en la práctica anterior.
 \begin{tikzpicture}
 \begin{axis}[
     ybar,
-    x=2.5cm,
+    x=2cm,
     xtick=data,% crucial line for the xticklabels directive
     ylabel=Tasa IN,
     ymin = 50,
@@ -620,13 +649,15 @@ Los datos y su análisis son los mismos que en la práctica anterior.
 \end{axis}
 \end{tikzpicture}
 \end{center}
+
+	Se aprecia una mejora de los algoritmos evolutivos sobre los algortimos de comparación, de nuevo como en la práctica 2, salvo para la base de datos \texttt{Arrhythmia}, con la salvedad de que ahora el no hay ningún algoritmo,  como estaba el \texttt{GRASP} en la práctica anterior que se le acerque. De entre los algoritmos genéticos, se observan mejores resultados para el operador de cruce uniforme, en especial en las BD mayores, donde el margen de mejora era más amplio. De los dos esquemas implementados, el generacional se muestra más efectivo, posiblemente por las razones comentadas previamente: al ir introduciendo hijos poco a poco, con una probabilidad uniforme de la selección de los padres a participar en el torneo, no estamos cambiando tanto la población en cada generación como para que el nivel general aumente.
  
 \subsubsection{Tasa Out}
 \begin{center}
 \begin{tikzpicture}
 \begin{axis}[
     ybar,
-    x=2.5cm,
+    x=2cm,
     xtick=data,% crucial line for the xticklabels directive
     ylabel=Tasa OUT,
     ymin = 40,
@@ -652,13 +683,14 @@ Los datos y su análisis son los mismos que en la práctica anterior.
 \end{tikzpicture}
 \end{center}
 
+Los resultados para la tasa fuera de la población son para los algoritmos genéticos muy parejos y las diferencias no son determinantes como para decir que un algoritmo es mejor que otro, pero sí que usando el operador de cruce uniforme, los resultados vuelven a ser un poco superiores. También para esta variable el ganador en \texttt{Arrhythmia} es el algoritmo \texttt{SFS} el que obtiene mejores resultados. En cambio para \texttt{WDBC} sí que hay diferencias a favor de los algoritmos genéticos en detrimento de \texttt{SFS}. En esto tiene mucho peso la distribución de los valores de la BD y el número de características, pues los algoritmos genéticos, que no tienen ningún mecanismo para disminuir el número de características, se ven perjudicados cuando este número es elevado y sólo hay unas pocas relevantes.
 
 \subsubsection{Tasa reducción}
 \begin{center}
 \begin{tikzpicture}
 \begin{axis}[
     ybar,
-    x=2.5cm,
+    x=2cm,
     xtick=data,% crucial line for the xticklabels directive
     ylabel=Tasa red.,
     ymin = 0,
@@ -684,6 +716,10 @@ Los datos y su análisis son los mismos que en la práctica anterior.
 \end{tikzpicture}
 \end{center}
 
+Con la tasa de reducción se observa que las hipótesis realizadas anteriormente son coherentes con los resultados. Los mejores resultados se obtienen con el esquema generacional y, en concreto, con el operador de cruce uniforme. Las tasas de reducción son claramente mayores en \textsl{SFS} y esto es efectivo en \texttt{Arrhythmia}, aunque no tanto en las otras bases de datos. 
+
+
+
 \subsubsection{Tiempos}
 
 \pgfplotstabletranspose[input colnames to=DB,columns={TW,TL,TA}]\dataTimes{\dataGlobal}
@@ -704,18 +740,20 @@ Los datos y su análisis son los mismos que en la práctica anterior.
     xticklabels={WDBC,Libras,Arrhythmia},
     xtick=data% crucial line for the xticklabels directive
 ]
-\addplot[sharp plot] 
-	table [x=DB, y=0]	{\dataTimes};
-\addplot[sharp plot,green] 
-	table [x=DB, y=1]	{\dataTimes};
 \addplot[sharp plot,blue] 
 	table [x=DB, y=2]	{\dataTimes};
 \addplot[sharp plot,red] 
 	table [x=DB, y=3]	{\dataTimes};
-\legend{KNN,SFS,AGG,AGE}
+\addplot[sharp plot] 
+	table [x=DB, y=4]	{\dataTimes};
+\addplot[sharp plot,green] 
+	table [x=DB, y=5]	{\dataTimes};
+\legend{AGG,AGE,AGG-H,AGE-H}
 \end{axis}
 \end{tikzpicture}
 \end{center}
+
+No se han incluido los tiempos para \texttt{KNN} ni \texttt{SFS} debido a que no son relevantes con respecto a los algoritmos genéticos. Tampoco existen diferencias significativas usando distintos operadores de cruce. Lo que sí se observa es un mayor tiempo para el algoritmo genético estacionario, especialmente en \texttt{Arrythmia}. De nuevo debemos pensar en que estamos ordenando en cada iteración del bucle general una ordenación, que es efectiva cuando la nueva generación ha sufrido cambios (de un $70\%$ en el esquema generacional), pero que en el estacionario sólo introducimos dos individuos nuevos, que pueden incluso no entrar en la nueva población si fuesen peores. Además, la ordenación en este caso, debido al operador de selección, es poco efectiva en cuanto a que sólo nos sirve para tener localizados a los dos peores individuos de la población; en cambio si influyese la posición en la probabilidad de ser seleccionado para el torneo y posterior cruce, quizá los resultados mejorasen con un tiempo similar.
 
 
 \section{Bibliografía}

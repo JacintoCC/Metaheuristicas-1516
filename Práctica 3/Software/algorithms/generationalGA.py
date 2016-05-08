@@ -38,7 +38,7 @@ def replaceOp_Generational(population, descendants):
     num_descendants = len(descendants)
     best_ancestor = population[-1]
 
-    if best_ancestor not in descendants:
+    if best_ancestor['score'] > max(descendants['score']):
         descendants[descendants['score'].argmin()] = best_ancestor
 
     return descendants

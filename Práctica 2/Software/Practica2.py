@@ -148,6 +148,7 @@ def main(args):
     database_name += db_options[args.DB] + '.arff'
     database = arff.loadarff(database_name)[0]
 
+    # Se pasan las características a int
     if( args.DB == 'W'):
         categories = np.array([bytes_to_int[row[class_row[args.DB]]] for row in database],
                               dtype=np.int32)

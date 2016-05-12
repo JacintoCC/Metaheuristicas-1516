@@ -93,7 +93,7 @@
 
 %Definición estilo en pseudocódigo
 \lstset{language=C,
-		otherkeywords={FOR,BEGIN,WHILE,IF,NOT,END,THEN,ELSE,DO,RETURN,REPEAT},
+		otherkeywords={FOR,BEG,IN,WHILE,IF,NOT,END,THEN,ELSE,EXIT,DO,RETURN,REPEAT},
         basicstyle=\ttfamily\footnotesize,
         keywordstyle=\color{blue}\bfseries,
         stringstyle=\color{blue}\ttfamily,
@@ -182,27 +182,30 @@ Las funciones de evaluación pueden estar basadas en la consistencia, en la Teor
 	Para este problema tenemos varias formas posibles de representar las soluciones:
 	\begin{itemize}
 		\item Representación binaria: Cada solución está representada por un vector binario de longitud igual al número de características, donde las posiciones seleccionadas tendrán un 1 o $\texttt{True}$ y las no seleccionadas un 0 o $\texttt{False}$. Esta opción, que será la que tomaremos, sólo es recomendable si no tenemos restricciones sobre el número de características seleccionadas.
-		\item Representación entera: Cada solución es un vector de tamaño fijo $m \leq n$ con las características seleccionadas. Esta representación sí es adecuada si tenemos restricciones sobre el número de características tomadas ya que no podemos hacerlo con más de $m$ características.
-		\item Representación de orden: Cada solución es una permutación de $n$ elementos, ordenados según la importancia de cada característica. Aquí también se maneja el cumplimiento de restricciones pues una vez encontrada la solución, tomaremos sólo las primeras $m$ características.
+		\item Representación entera: Cada solución es un vector de tamaño fijo $m \leq n$ con las características seleccionadas.
+		\item Representación de orden: Cada solución es una permutación de $n$ elementos, ordenados según la importancia de cada característica.
 	\end{itemize}
-	Se ha de mencionar que en las dos últimas representaciones el espacio de soluciones es mayor que el espacio de búsqueda, justificado en la representación de orden porque da más información (podríamos tomar soluciones de longitud variable), pero que en la representación entera sólo es razonable asumir si tenemos una restricción de longitud fija. Además, otra ventaja de la representación binaria es la facilidad para aplicarle operadores (de vecindario, en posteriores prácticas de cruce...) manteniendo la consistencia.\\
-	Para esta práctica, aunque la representación de las soluciones también venga dada por la representación binaria, tendremos en todo momento una población en forma de \texttt{array} estructurado. Esto es, un \texttt{array} donde cada elemento está formado a su vez por dos cosas: el cromosoma, es decir, el vector de valores \textit{booleanos} que determinan la selección o no de una característica, y el valor o \textit{score} del mismo. De esta manera podemos saber la tasa de acierto de un vector solución sin tener que volver a llamar a la función de evaluación; sólo llamaremos a esta función cuando surja el nuevo individuo de la población.
+	En las dos últimas representaciones el espacio de soluciones es mayor que el espacio de búsqueda. Además, la representación binaria nos facilita la aplicación de los operadores de cruce o mutación, manteniendo la consistencia.\\
+	Para esta práctica, aunque la representación de las soluciones también venga dada por la representación binaria, tendremos en todo momento una población en forma de \texttt{array} estructurado. Esto es, un \texttt{array} donde cada elemento está formado a su vez por dos atributos: el cromosoma, es decir, el vector de valores \textit{booleanos} que determinan la selección o no de una característica, y el valor o \textit{score} del mismo. De esta manera podemos saber la tasa de acierto de un vector solución sin tener que volver a llamar a la función de evaluación; sólo llamaremos a esta función cuando surja el nuevo individuo de la población.
 
 \subsection{Función objetivo}
-	La función objetivo será el porcentaje de acierto en el conjunto de test para el clasificador $3-NN$ obtenido usando las distancias de los individuos $\omega$ en las dimensiones representadas por las características seleccionadas en el vector solución para el conjunto de entrenamiento. El objetivo será maximizar esta función. A la hora de buscar esta solución sólo estaremos manejando los datos de entrenamiento, luego aquí la función objetivo será la media de tasa de acierto para cada uno de los datos de entrenamiento con respecto a todos los demás, por lo que tenemos que usar la técnica de $\textit{Leave-One-Out}$. Esta técnica consiste en quitar del conjunto de datos cada uno de los elementos, comprobar el acierto o no para este dato en concreto, y devolverlo al conjunto de datos. Así evitamos que los resultados estén sesgados a favor de la clase o etiqueta original, al contar siempre con un voto la clase verdadera.\\
-	La implementación de la función objetivo (obtener el score para Test) la he realizado basándome en el código paralelizado realizado para CUDA por Alejandro García Montoro para la función de $\textit{Leave One Out}$. El pseudocódigo incluido se trata del esquema seguido para cada proceso, esto es, cada elemento en el conjunto de datos de entrenamiento, puesto que el método en $\texttt{Python}$ para pasarle a la GPU los datos de entrenamiento, test, categorías y un puntero con la solución no tiene mayor interés.
+	La función objetivo será el porcentaje de acierto en el conjunto de test para el clasificador $\texttt{3-NN}$ obtenido usando las distancias de los individuos $\omega$ en las dimensiones representadas por las características seleccionadas en el vector solución para el conjunto de entrenamiento. 
+	El objetivo será maximizar esta función. A la hora de buscar esta solución sólo estaremos manejando los datos de entrenamiento, luego aquí la función objetivo será la media de tasa de acierto para cada uno de los datos de entrenamiento con respecto a todos los demás, por lo que tenemos que usar la técnica de $\textit{Leave-One-Out}$. 
+	Esta técnica consiste en quitar del conjunto de datos cada uno de los elementos, comprobar el acierto o no para este dato en concreto, y devolverlo al conjunto de datos. Así evitamos que los resultados estén sesgados a favor de la clase o etiqueta original, al contar siempre con un voto la clase verdadera.
+	\newpage
+	La implementación de la función objetivo (obtener el \textit{score} para Test) la he realizado basándome en el código paralelizado realizado para CUDA por Alejandro García Montoro para la función de $\textit{Leave One Out}$. El pseudocódigo incluido se trata del esquema seguido para cada proceso, esto es, cada elemento en el conjunto de datos de entrenamiento, puesto que el método en $\texttt{Python}$ para pasarle a la GPU los datos de entrenamiento, test, categorías y un puntero con la solución no tiene mayor interés.
 	
 \begin{lstlisting}[mathescape=true]
 targetFunction(data_train, categories_train, 
                data_test,  categories_test):
 BEGIN
-   test $\leftarrow$ Num. Process
+   test $\leftarrow$ Get Process Number
    num_test $\leftarrow$ length(data_test)
    
-   $\textbf{\texttt{exit}}$ IF test > num_test
+   EXIT IF test > num_test
    my_features $\leftarrow$ data_test[test]
    
-   k_nearest $\leftarrow$ initialize3Neighbours
+   k_nearest $\leftarrow$ {{item: -1, distance:$\infty$}, size = k}
 	
    FOR item IN data_train
       distance $\leftarrow$ computeDistance(my_features, item)
@@ -211,7 +214,7 @@ BEGIN
 	
    class $\leftarrow$ poll(classes of k_nearest)
       
-   RETURN class == categories_test[test]
+   RETURN class = categories_test[test]
 END
 \end{lstlisting}
 
@@ -222,13 +225,13 @@ END
 \begin{lstlisting}[mathescape=true]
 targetFunctionLeaveOneOut(data_train, categories_train):
 BEGIN
-   sample $\leftarrow$ Num. Process
+   sample $\leftarrow$ Get Process Number
    num_samples $\leftarrow$ length(data_train)
    
-   $\textbf{\texttt{exit}}$ IF sample > num_samples
+   EXIT IF sample > num_samples
    my_features $\leftarrow$ data_train[sample]
    
-   k_nearest $\leftarrow$ initialize3Neighbours
+   k_nearest $\leftarrow$ {{item: -1, distance:$\infty$}, size=k}
 	
    FOR item IN data_train
     IF item $\neq$ sample THEN
@@ -238,7 +241,7 @@ BEGIN
 	
    class $\leftarrow$ poll(classes of k_nearest)
       
-   RETURN class == categories_train[sample]
+   RETURN class = categories_train[sample]
 END
 \end{lstlisting}
 
@@ -278,7 +281,7 @@ END
 huxCrossOperator( parent_1, parent_2 ):
 BEGIN
    FOR j IN {1,..., num_features} :
-      IF parent_1[j] == parent_2[j] THEN
+      IF parent_1[j] = parent_2[j] THEN
          desc_1[j] $\leftarrow$ parent_1[j]
          desc_2[j] $\leftarrow$ parent_1[j]
       ELSE
@@ -370,14 +373,14 @@ BEGIN
    num_checks $\leftarrow$ 30
    
    WHILE num_checks < MAX_CHECKS DO
-   
       selected_parents $\leftarrow$ selectionOperator(population)
       
       descendants $\leftarrow$  crossOperator(selected_parents)
       descendants $\leftarrow$ mutationOperator(descendants, MUTATION_PROBABILITY)
                                                       
-      FOR desc IN descendants not evaluated:
+      FOR desc IN descendants which are not evaluated:
          score(data[desc],categories)
+         num_checks $\leftarrow$ num_checks + 1
                             
       replaceOperator(population, descendants)
       sort(population, by scores)
@@ -408,7 +411,8 @@ END
 selectionOperator_generational(population):
 BEGIN
    tourn_cand $\leftarrow$ {random(population): size = 2 length(population)}
-   parents $\leftarrow$ {tournament(tourn_cand[i], tourn_cand[i+1]) : i = 0,2,...,2*(length(population)-1)}
+   parents $\leftarrow$ {tournament(tourn_cand[i], tourn_cand[i+1]) : 
+               i = 0,2,...,2*(length(population)-1)}
    
    RETURN parents
 END
@@ -422,7 +426,7 @@ END
 replaceOperator_generational(population, descendants):
 BEGIN
    best $\leftarrow$ first(population)
-   IF best NOT IN descendants THEN
+   IF best is better than best(descendants) THEN
       last(descendants) = best
    
    RETURN descendants
@@ -458,7 +462,8 @@ END
 Como algoritmo de comparación tenemos el algoritmo \textit{greedy} SFS. Partiendo de un vector con ninguna característica seleccionada, exploramos por el entorno y nos quedamos con el vecino que genera una mejor tasa de acierto. Repetimos este proceso hasta que ningún vecino aporta una mejora a la solución obtenida.
 
 	\begin{lstlisting}[mathescape=true]
-greedySFS(data, categories) BEGIN
+greedySFS(data, categories):
+BEGIN
    solution $\leftarrow$ {F,...,F: size = num_features}
    current_value $\leftarrow$ getValue(data, categories, solution)
    
@@ -489,7 +494,7 @@ Los paquetes utilizados son:
 	\item \texttt{pycuda} y \texttt{jinja2} para la paralelización en \texttt{CUDA}.
 \end{enumerate}	
 
-	La semilla con la que he realizado las ejecuciones es $3141592$, insertada tanto en el generador en $\texttt{C}$ como en el generador de números de $\texttt{numpy}$ y en el propio de \texttt{Python}. He usado los dos porque pretendía usar el primero, que es con el que se realizan las particiones, pero al llegar a los métodos que usan los generadores de números pseudoaleatorios en su funcionamiento me dí cuenta de que tendría que repetir el código de importación del módulo en \texttt{C} para cada método, por lo que opté por usar en los métodos el \texttt{random} de \texttt{numpy}. Mientras he ido realizando la práctica he ido creando funciones para permitir un más cómodo manejo del programa intentando que el código fuese entendible.
+	La semilla con la que he realizado las ejecuciones es $3141592$, insertada tanto en el generador en $\texttt{C}$ como en el generador de números de $\texttt{numpy}$ y en el propio de \texttt{Python}. He usado los dos porque pretendía usar el primero, que es con el que se realizan las particiones, pero al llegar a los métodos que usan los generadores de números pseudoaleatorios en su funcionamiento me dí cuenta de que tendría que repetir el código de importación del módulo en \texttt{C} para cada método, por lo que opté por usar en los métodos el \texttt{random} de \texttt{numpy}. 
 	
 \subsection{Ejecución del programa}
 La salida de cada ejecución (10 iteraciones de un algoritmo con una base de datos) se puede elegir entre mostrar por pantalla o redirigir a un archivo $\texttt{.csv}$ para manejarlo posteriormente, por ejemplo para incluir la tabla en \LaTeX.\\

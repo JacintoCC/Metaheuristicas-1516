@@ -92,6 +92,18 @@
 \newcommand{\getElement}[3]{\pgfplotstablegetelem{#2}{#3}\of{#1} \pgfplotsretval}
 
 
+%Definición estilo en pseudocódigo
+\lstset{language=C,
+		otherkeywords={FOR,BEGIN,WHILE,IF,NOT,END,THEN,ELSE,DO,RETURN,REPEAT},
+        basicstyle=\ttfamily\footnotesize,
+        keywordstyle=\color{blue}\bfseries,
+        stringstyle=\color{blue}\ttfamily,
+        frame=L,
+  		xleftmargin=\parindent,
+        commentstyle=\color{green}\ttfamily,
+        breaklines=true
+}
+
 \begin{document}
 
 % Tablas KNN
@@ -180,13 +192,13 @@ Las funciones de evaluación pueden estar basadas en la consistencia, en la Teor
 targetFunction(data_train, categories_train, 
                data_test,  categories_test):
 BEGIN
-   test $\leftarrow$ Num. Process
+   test $\leftarrow$ Get Process Number
    num_test $\leftarrow$ length(data_test)
    
    $\textbf{\texttt{exit}}$ IF test > num_test
    my_features $\leftarrow$ data_test[test]
    
-   k_nearest $\leftarrow$ initialize3Neighbours
+   k_nearest $\leftarrow$ {{item: -1, distance:$\infty$} for i=1,...,k}
 	
    FOR item IN data_train
       distance $\leftarrow$ computeDistance(my_features, item)
@@ -195,7 +207,7 @@ BEGIN
 	
    class $\leftarrow$ poll(classes of k_nearest)
       
-   RETURN class == categories_test[test]
+   RETURN class = categories_test[test]
 END
 \end{lstlisting}
 
@@ -211,7 +223,7 @@ BEGIN
    $\textbf{\texttt{exit}}$ if sample > num_samples
    my_features $\leftarrow$ data_train[sample]
    
-   k_nearest $\leftarrow$ initialize3Neighbours
+   k_nearest $\leftarrow$ {{item: -1, distance:$\infty$} for i=1,...,k}
 	
    FOR item IN data_train
     IF item $\neq$ sample THEN
@@ -221,7 +233,7 @@ BEGIN
 	
    class $\leftarrow$ poll(classes of k_nearest)
       
-   RETURN class == categories_train[sample]
+   RETURN class = categories_train[sample]
 END
 \end{lstlisting}
 
@@ -245,8 +257,7 @@ Como diferencia con respecto a la primera práctica, ahora la solución inicial 
 localSearch(data, categories, solution) BEGIN	
    REPEAT
       first_neig $\leftarrow$  random{1,..., num_features}
-      neighbours $\leftarrow$ {flip(solution,i): 
-                            i=first_neig,...,first_neig-1}
+      neighbours $\leftarrow$ {flip(solution,i): i=first_neig,...,first_neig-1}
       found_better $\leftarrow$ FALSE
 		
       FOR neig IN neighbours
@@ -254,8 +265,7 @@ localSearch(data, categories, solution) BEGIN
             found_better $\leftarrow$ TRUE
             solution $\leftarrow$ neig
             BREAK
-		
-         END
+      END
    WHILE( found_better )
 	
    return solution
@@ -270,13 +280,13 @@ END
 
 Este método consiste en la realización de diferentes búsquedas locales que parten de soluciones aleatorias. Para ello, simplemente se lanzan, como se indica en el guión de prácticas, 25 búsquedas locales y devolvemos la mejor solución encontrada. El criterio para considerar que una solución es mejor que otra se basa, como se ha dicho previamente, en encontrar el vector de características que ofrezca una mejor tasa de acierto y, de entre ellas, la que tenga menos características seleccionadas. Los resultados esperados serán similares a las mejores ejecuciones del apartado de búsqueda local en la práctica anterior. Se podrá observar también si el hecho de incluir aceptar como mejores soluciones con igual tasa de acierto y menor número de características beneficia o perjudica a la tasa de acierto fuera de los datos de entrenamiento.
 
-	\newpage \begin{lstlisting}[mathescape=true]
+	\begin{lstlisting}[mathescape=true]
 BMB(data, categories) BEGIN	
    num_features $\leftarrow$ length ( data[0] )
    best_solution $\leftarrow$ {F,...,F: size = num_features}
    
    FOR i = 1,...,25
-      solution $\leftarrow$ random({True,False}, size = num_features)
+      solution $\leftarrow$ {random({True,False}), size = num_features}
                                    
       solution $\leftarrow$ localSearch(data, categories, solution)
       IF solution is better than best_solution THEN
@@ -286,6 +296,8 @@ BMB(data, categories) BEGIN
    return best_solution
 END
 	\end{lstlisting}
+	
+	Aquí el criterio para decir que es mejor sí hace referencia al número de características seleccionadas.
 
 \subsection{GRASP}
 
@@ -317,13 +329,12 @@ getGreedySolution(data, categories) BEGIN
    tolerance $\leftarrow$ 0.3
    
    REPEAT
-      char $\leftarrow$ getCharWithThreshold(data,categories,
-                                   solution,tolerance)
-      
-      IF flip(solution, char) is better than solution THEN
+      char $\leftarrow$ getCharWithThreshold(data,categories, solution,tolerance)
+      exists_benefit $\leftarrow$ flip(solution, char) is better than solution
+      IF exists_benefit THEN
          solution $\leftarrow$ flip(solution, char)
    
-   WHILE flip(solution, char) is better than solution
+   WHILE exists_benefit
    
    RETURN solution
 END
@@ -335,22 +346,18 @@ END
 getCharWithThreshold(data, categories,solution,tolerance) BEGIN
    values $\leftarrow$ vector( size = num_features )
    FOR i = 1,..., num_features
-      
       neig $\leftarrow$ neighbours[i]
       values[i] $\leftarrow$ score(data, categories, neig)
-   
    END
    
    max $\leftarrow$ max(values)
    min $\leftarrow$ min(values)   
-   above_threshold $\leftarrow$ {i $\in$ {1,...,N: 
-                         values[i] > max - tolerance(max-min)}
-   char $\leftarrow$ random(above_threshold)
+   above_threshold $\leftarrow$ {i $\in$ {1,...,N}: values[i] > max-tolerance(max-min)}
+   char $\leftarrow$ random({above_threshold})
    
    RETURN char 
 END
 	\end{lstlisting}
-	
 	
 	
 \subsection{ILS}
@@ -378,6 +385,7 @@ END
 
 Como algoritmo de comparación tenemos el algoritmo \textit{greedy} SFS. Partiendo de un vector con ninguna característica seleccionada, exploramos por el entorno y nos quedamos con el vecino que genera una mejor tasa de acierto. Repetimos este proceso hasta que ningún vecino aporta una mejora a la solución obtenida.
 
+	\newpage
 	\begin{lstlisting}[mathescape=true]
 greedySFS(data, categories) BEGIN
    solution $\leftarrow$ {F,...,F: size = num_features}
@@ -410,7 +418,7 @@ Los paquetes utilizados son:
 	\item \texttt{pycuda} y \texttt{jinja2} para la paralelización en \texttt{CUDA}.
 \end{enumerate}	
 
-	La semilla con la que he realizado las ejecuciones es $3141592$, insertada tanto en el generador en $\texttt{C}$ como en el generador de números de $\texttt{numpy}$ y en el propio de \texttt{Python}. He usado los dos porque pretendía usar el primero, que es con el que se realizan las particiones, pero al llegar a los métodos que usan los generadores de números pseudoaleatorios en su funcionamiento me dí cuenta de que tendría que repetir el código de importación del módulo en \texttt{C} para cada método, por lo que opté por usar en los métodos el \texttt{random} de \texttt{numpy}. Mientras he ido realizando la práctica he ido creando funciones para permitir un más cómodo manejo del programa intentando que el código fuese entendible.
+	La semilla con la que he realizado las ejecuciones es $3141592$, insertada tanto en el generador en $\texttt{C}$ como en el generador de números de $\texttt{numpy}$ y en el propio de \texttt{Python}. He usado los dos porque pretendía usar el primero, que es con el que se realizan las particiones, pero al llegar a los métodos que usan los generadores de números pseudoaleatorios en su funcionamiento me di cuenta de que tendría que repetir el código de importación del módulo en \texttt{C} para cada método, por lo que opté por usar en los métodos el \texttt{random} de \texttt{numpy}.
 	
 \subsection{Ejecución del programa}
 La salida de cada ejecución (10 iteraciones de un algoritmo con una base de datos) se puede elegir entre mostrar por pantalla o redirigir a un archivo $\texttt{.csv}$ para manejarlo posteriormente, por ejemplo para incluir la tabla en \LaTeX.\\

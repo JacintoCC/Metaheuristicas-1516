@@ -3,6 +3,7 @@ from knnGPU.knnLooGPU import *
 from math import floor
 from BasicFunctions import *
 
+# Operador de cruce por dos puntos
 def twoPointsCrossOperator(p1, p2):
     num_features = len(p1['chromosome'])
     genes_type = [('chromosome',str(num_features)+'bool'),('score', np.float)]
@@ -17,6 +18,7 @@ def twoPointsCrossOperator(p1, p2):
 
     return desc
 
+# Operador de cruce uniforme
 def huxCrossOperator(p1, p2):
     num_features = len(p1['chromosome'])
     genes_type = [('chromosome',str(num_features)+'bool'),('score', np.float)]
@@ -35,12 +37,14 @@ def huxCrossOperator(p1, p2):
 
     return desc
 
+# Método para obtener una generación inicial aleatoria
 def getInitialPopulation(num_genes, num_chromosomes):
     population = np.array([ np.array(np.random.random(size = num_genes) < 0.5)
                            for i in range(num_chromosomes) ])
 
     return population
 
+# Método de torneo entre una pareja de individuos
 def tournament(pair):
     if pair[0]['score'] > pair[1]['score'] or (pair[0]['score'] == pair[1]['score'] and
                     sum(pair[0]['chromosome']) < sum(pair[0]['chromosome'])):
@@ -51,13 +55,14 @@ def tournament(pair):
     else:
         return pair[np.random.randint(2)]
 
-
+# Método para realizar una mutación aleatoria
 def mutate(descendants, mutation_prob):
     num_genes = len(descendants[0]['chromosome'])
     num_descendants = len(descendants)
     num_total_genes = num_descendants*num_genes
     num_genes_to_mutate = floor(num_total_genes*mutation_prob)
 
+    # Añadimos un gen a mutar de forma aleatoria para los últimos (1/mutation_prob) genes
     if np.random.random() < (num_total_genes*mutation_prob-num_genes_to_mutate):
         num_genes_to_mutate += 1
 
@@ -69,7 +74,9 @@ def mutate(descendants, mutation_prob):
         flip(descendants[individual]['chromosome'],gen%num_genes)
         descendants[individual]['score']=0
 
-
+# Estructura de los algoritmos genéticos.
+# Recibe por parámetro los datos de entrenamiento, la función de evaluación
+# y los operadores propios de los algoritmos genéticos.
 def geneticAlgorithm(train_data, train_categ, scorer,
                      selectionOperator, crossOperator,
                      mutationOperator, replaceOperator):

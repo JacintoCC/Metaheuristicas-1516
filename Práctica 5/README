@@ -1,0 +1,17 @@
+Práctica 5 Metaheurísticas
+Jacinto Carrasco Castillo
+
+Se incluye el informe en PDF de la práctica.
+En la carpeta Software están los archivos necesarios para la ejecución
+de la práctica. Al ser Python un lenguaje interpretado no hay una
+carpeta con el ejecutable. En el informe se detalla cómo ejecutar la
+práctica.
+Se incluye dentro de Software una carpeta con las BD, el fichero de
+Arrhythmia ha sido modificado para tener menos características elimi-
+nando aquellas cuyos valores eran todos el mismo. En la carpeta
+Resultados se encuentran los resultados obtenidos por la ejecución
+en formato .csv. Esto permite la inclusión en el informe más cómoda,
+y permite que al ejecutar el programa se sigan guardando en esa carpeta.
+La carpeta Random_ppio incluye el generador de números aleatorios en C
+proporcionado. En knnGPU se incluye el código utilizado para paralelizar
+el kNN usando CUDA.

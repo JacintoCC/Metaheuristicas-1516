@@ -7,7 +7,7 @@ from BasicFunctions import *
 def memeticAlgorithm(train_data, train_categ, scorer,
                      selectionOperator, crossOperator,
                      mutationOperator, replaceOperator,
-                     num_generations, ls_prob):
+                     localSeachOperator):
     # Parameters
     num_features = len(train_data[0])
     num_chromosomes = 30
@@ -26,7 +26,7 @@ def memeticAlgorithm(train_data, train_categ, scorer,
     num_checks = num_chromosomes
     population.sort(order='score')
 
-    current_generations = 0
+    current_generation = 0
 
     while num_checks<max_checks:
         # Selección
@@ -47,35 +47,75 @@ def memeticAlgorithm(train_data, train_categ, scorer,
         # Reemplazamiento
         population = replaceOperator(population, descendants)
 
-        # Búsqueda local
-        if current_generations == num_generations:
-            for ind in population:
-                if random.random() < ls_prob:
-                    ind['chromosome'], ind['score'], ls_checks  = localSearch(train_data, train_categ,
-                                                                              scorer, ind['chromosome'])
-
-                    num_checks += ls_checkss
-
-            current_generations = 0
-        else:
-            current_generations += 1
+        # Local search
+        ls_checks = localSeachOperator(current_generation, population,
+                                       train_data, train_categ)
+        num_checks += ls_checks
 
         # Reordenación
         population.sort(order = 'score')
 
+        num_generations += 1
+
     return population[-1]['chromosome'], population[-1]['score']
 
+
+def getLSOperator(num_generations, prob_ls):
+    def localSeachOperator(current_generation, population,
+                           train_data, train_categ, scorer):
+        num_checks = 0
+        num_agents_to_ls = round(len(population)*prob_ls)
+
+        # Búsqueda local
+        if current_generation % num_generations == 0:
+            agents_to_ls = np.random.choice(np.arange(len(population)),replace=False,
+                                            size = num_agents_to_ls)
+            for i in agents_to_ls:
+                ind['chromosome'], ind['score'], ls_checks  = localSearch(train_data, train_categ,
+                                                                          scorer, population[i]['chromosome'])
+                num_checks += ls_checks
+
+        return num_checks
+
+    return localSeachOperator
+
+def getLSBestOperator(num_generations, prob_ls):
+    def localSeachOperator(current_generation, population,
+                           train_data, train_categ, scorer):
+        num_checks = 0
+        num_agents_to_ls = round(len(population)*prob_ls)
+
+        # Búsqueda local
+        if current_generation % num_generations == 0:
+            # Reordenación
+            population.sort(order = 'score')
+
+            for agent in population[:num_agents_to_ls]:
+                agent['chromosome'], agent['score'], ls_checks  = localSearch(train_data, train_categ,
+                                                                              scorer, agent['chromosome'])
+                num_checks += ls_checks
+
+        return num_checks
+
+    return localSeachOperator
 
 def memetic1(train_data, train_categ, scorer):
     return memeticAlgorithm(train_data, train_categ, scorer,
                             selectionOp_Generational,
                             crossOp_Generational(huxCrossOperator),
                             mutate, replaceOp_Generational,
-                            10, 1)
+                            getLSOperator(10, 1))
 
 def memetic01(train_data, train_categ, scorer):
     return memeticAlgorithm(train_data, train_categ, scorer,
                             selectionOp_Generational,
                             crossOp_Generational(huxCrossOperator),
                             mutate, replaceOp_Generational,
-                            10, 0.1)
+                            getLSOperator(10, 0.1))
+
+def memetic01mej(train_data, train_categ, scorer):
+    return memeticAlgorithm(train_data, train_categ, scorer,
+                            selectionOp_Generational,
+                            crossOp_Generational(huxCrossOperator),
+                            mutate, replaceOp_Generational,
+                            getLSBestOperator(10, 0.1))

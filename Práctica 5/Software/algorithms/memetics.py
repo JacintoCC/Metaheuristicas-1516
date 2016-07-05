@@ -2,7 +2,8 @@ import numpy as np
 from knnGPU.knnLooGPU import *
 from math import floor
 from BasicFunctions import *
-
+from algorithms.generationalGA import *
+from algorithms.localSearch import *
 
 def memeticAlgorithm(train_data, train_categ, scorer,
                      selectionOperator, crossOperator,
@@ -19,7 +20,7 @@ def memeticAlgorithm(train_data, train_categ, scorer,
     # Getting initial population
     pop_initial = getInitialPopulation(num_features, num_chromosomes)
     pop_scores = np.array([scorer(train_data[:,chromosome], train_categ)
-                                   for )chromosome in pop_initial])
+                                   for chromosome in pop_initial])
 
     population = np.array([x for x in zip(pop_initial, pop_scores)], dtype = genes_type)
 
@@ -49,13 +50,13 @@ def memeticAlgorithm(train_data, train_categ, scorer,
 
         # Local search
         ls_checks = localSeachOperator(current_generation, population,
-                                       train_data, train_categ)
+                                       train_data, train_categ,scorer)
         num_checks += ls_checks
 
         # Reordenación
         population.sort(order = 'score')
 
-        num_generations += 1
+        current_generation += 1
 
     return population[-1]['chromosome'], population[-1]['score']
 
@@ -71,7 +72,7 @@ def getLSOperator(num_generations, prob_ls):
             agents_to_ls = np.random.choice(np.arange(len(population)),replace=False,
                                             size = num_agents_to_ls)
             for i in agents_to_ls:
-                ind['chromosome'], ind['score'], ls_checks  = localSearch(train_data, train_categ,
+                population[i]['chromosome'], population[i]['score'], ls_checks  = localSearch(train_data, train_categ,
                                                                           scorer, population[i]['chromosome'])
                 num_checks += ls_checks
 

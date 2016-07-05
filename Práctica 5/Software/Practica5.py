@@ -12,8 +12,7 @@ from BasicFunctions import *
     # Importación de los algoritmos utilizados en la práctica
 from algorithms.kNNSolution import kNNSolution
 from algorithms.greedySFS import greedySFS
-from algorithms.antColony import antColony
-from algorithms.antMaxMin import antMaxMin
+from algorithms.memetics import *
 
     # Importación de la clase para realizar el score de una solución
 from knnGPU.knnLooGPU import knnLooGPU
@@ -119,16 +118,16 @@ def main(args):
     database_name = 'Datos/'
     db_options = {'W': 'wdbc', 'L': 'movement_libras', 'A':'arrhythmia'}
     alg_options = {'K': kNNSolution, 'S': greedySFS, '1': memetic1,
-                   '2': memetic01, '3', memetic01mej}
-    alg_names = {'K': "KNN", 'S': "SFS", '1': "AM-(10,1.0)", '2': "AM-(10,0.1)",
-                 '3':"AM-(10,0.1mej)"}
+                   '2': memetic01, '3': memetic01mej}
+    alg_names = {'K': "KNN", 'S': "SFS", '1': "AM (10, 1)", '2': "AM (10, 0.1)",
+                 '3':"AM (10, 0.1-mej)"}
     class_row = {'W': 0, 'L': 90, 'A':253}
     bytes_to_int = {b'B': 0, b'M': 1}
 
     parser = argparse.ArgumentParser(description='')
     parser.add_argument('DB', choices=['W','L','A'],
                        help='DB to use. W -> WDBC;   L -> Libras;   A -> Arrhythmia')
-    parser.add_argument('-a', choices=['K','S','C','M'],
+    parser.add_argument('-a', choices=['K','S','1','2','3'],
                         help='Algorithm to use. K -> kNN; S -> greedy SFS; 1 -> memetic (10, 1); 2 -> memetic (10, 0.1); 3 -> memetic(10, 0.1) mej.',
                         default='K')
     parser.add_argument('-write', type=bool,

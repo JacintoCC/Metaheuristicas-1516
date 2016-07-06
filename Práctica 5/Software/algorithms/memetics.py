@@ -91,7 +91,7 @@ def getLSBestOperator(num_generations, prob_ls):
             # Reordenación
             population.sort(order = 'score')
 
-            for agent in population[:num_agents_to_ls]:
+            for agent in population[num_agents_to_ls:]:
                 agent['chromosome'], agent['score'], ls_checks  = localSearch(train_data, train_categ,
                                                                               scorer, agent['chromosome'])
                 num_checks += ls_checks

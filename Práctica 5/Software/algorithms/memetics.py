@@ -11,7 +11,7 @@ def memeticAlgorithm(train_data, train_categ, scorer,
                      localSeachOperator):
     # Parameters
     num_features = len(train_data[0])
-    num_chromosomes = 30
+    num_chromosomes = 10
     max_checks = 15000
     mutation_prob = 0.001
 
@@ -29,7 +29,7 @@ def memeticAlgorithm(train_data, train_categ, scorer,
 
     current_generation = 0
 
-    while num_checks<max_checks:
+    while num_checks < max_checks:
         # Selección
         selected_parents = selectionOperator(population)
 
@@ -65,15 +65,17 @@ def getLSOperator(num_generations, prob_ls):
     def localSeachOperator(current_generation, population,
                            train_data, train_categ, scorer):
         num_checks = 0
-        num_agents_to_ls = round(len(population)*prob_ls)
 
         # Búsqueda local
         if current_generation % num_generations == 0:
+            num_agents_to_ls = round(len(population)*prob_ls)
             agents_to_ls = np.random.choice(np.arange(len(population)),replace=False,
                                             size = num_agents_to_ls)
             for i in agents_to_ls:
-                population[i]['chromosome'], population[i]['score'], ls_checks  = localSearch(train_data, train_categ,
+                ls_solution, ls_score, ls_checks  = localSearch1iteration(train_data, train_categ,
                                                                           scorer, population[i]['chromosome'])
+                population[i]['chromosome'] = ls_solution
+                population[i]['score'] = ls_score
                 num_checks += ls_checks
 
         return num_checks
@@ -84,16 +86,18 @@ def getLSBestOperator(num_generations, prob_ls):
     def localSeachOperator(current_generation, population,
                            train_data, train_categ, scorer):
         num_checks = 0
-        num_agents_to_ls = round(len(population)*prob_ls)
-
+        
         # Búsqueda local
         if current_generation % num_generations == 0:
+            num_agents_to_ls = round(len(population)*prob_ls)
             # Reordenación
             population.sort(order = 'score')
 
             for agent in population[num_agents_to_ls:]:
-                agent['chromosome'], agent['score'], ls_checks  = localSearch(train_data, train_categ,
-                                                                              scorer, agent['chromosome'])
+                ls_solution, ls_score , ls_checks  = localSearch1iteration(train_data, train_categ,
+                                                                           scorer, agent['chromosome'])
+                agent['chromosome'] = ls_solution
+                agent['score'] = ls_score
                 num_checks += ls_checks
 
         return num_checks

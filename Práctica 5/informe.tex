@@ -149,6 +149,9 @@
 % Tabla Resumen
 \pgfplotstableread[col sep=comma]{Software/Resultados/results.csv}\dataGlobal
 
+% Tabla Resumen
+\pgfplotstableread[col sep=comma]{Software/Resultados/resultsAI.csv}\dataGlobalAI
+
 % Portada y título
 \maketitle
 
@@ -396,6 +399,31 @@ localSearch1Iteration(data, categories, solution) BEGIN
    RETURN solution, num_checks
 END
 	\end{lstlisting}
+	
+	Se han obtenido también los resultados de los tres métodos pero realizando una búsqueda local de alta intensidad, es decir, aplicando la búsqueda local hasta que ésta no encontrase mejora. Esto hace que se aumente la intensificación pero pagando a cambio de realizar menos iteraciones de la parte evolutiva del proceso. El método de búsqueda sería el siguiente:
+	
+	
+\begin{lstlisting}[mathescape=true]
+localSearch(data, categories, solution) BEGIN	
+
+   max_checks $\leftarrow$ 15000
+   num_checks $\leftarrow$ 0
+
+   REPEAT
+      new_sol, checks $\leftarrow$ localSearch1Iteration(data, 
+                       categories, solution)
+                       
+      found_better $\leftarrow$ new_sol is better than solution
+      num_checks  $\leftarrow$ num_checks + checks
+      
+      IF found_better THEN
+         solution  $\leftarrow$ new_solution
+		
+   WHILE( found_better AND  num_checks < max_checks)
+      
+   RETURN solution, num_checks
+END
+\end{lstlisting}
 
 \subsection{Aplicación de la búsqueda local}
 
@@ -412,10 +440,11 @@ localSearchOperator(current_generation, population, data, categories) BEGIN
    
    IF current_generation $\equiv$ 0 $mod($num_generations$)$ THEN
       agents_to_ls $\leftarrow$ random(population,
-                                       size = length population * prob_local_search)
+                        size = length(population) * prob_local_search)
                                        
       FOR agent IN agent_to_ls
-         agent, ls_checks $\leftarrow$ localSearch1Iteration(data, categories, agent)
+         agent, ls_checks $\leftarrow$ localSearch1Iteration(data, categories,
+                                                  agent)
          
          num_checks $\leftarrow$ num_checks + ls_checks
       END
@@ -435,10 +464,11 @@ localSearchOperator(current_generation, population, data, categories) BEGIN
    
    IF current_generation $\equiv$ 0 $mod($num_generations$)$ THEN
       sort(population, by scores)
-      agents_to_ls $\leftarrow$ first(size = length population * prob_local_search)
+      agents_to_ls $\leftarrow$ first(size = length(population)*prob_local_search)
                                        
       FOR agent IN agent_to_ls
-         agent, ls_checks $\leftarrow$ localSearch1Iteration(data, categories, agent)
+         agent, ls_checks $\leftarrow$ localSearch1Iteration(data, categories, 
+                                                   agent)
          
          num_checks $\leftarrow$ num_checks + ls_checks
       END
@@ -600,6 +630,8 @@ Para el \texttt{SFS} se obtienen buenos resultados comparándolos con el \texttt
 % Salida por pantalla
 \maketable{\dataAMa}
 
+Como pasa con los demás algoritmos implementados hasta ahora, se observa el incremento esperable con respecto al \texttt{KNN} y con respecto a \texttt{SFS} (salvo en \texttt{Arrhythmia} donde el algoritmo \textit{greedy} sigue siendo más efectivo). 
+
 
 \subsubsection{Algoritmo memético con probabilidad de optimización 0.1}
 % Tablas Resumen AM01
@@ -608,6 +640,8 @@ Para el \texttt{SFS} se obtienen buenos resultados comparándolos con el \texttt
 % Salida por pantalla
 \maketable{\dataAMb}
 
+Con la optimización local sólo en un $10\%$ de los individuos se observa que los resultados son muy similares a optimizar toda la población. Sin embargo las diferencias en el tiempo de ejecución en la base de datos \texttt{Arrhythmia} sí que son significativas.
+
 
 \subsubsection{Algoritmo memético con optimización sobre los mejores individuos}
 % Tablas Resumen AM01m
@@ -615,6 +649,8 @@ Para el \texttt{SFS} se obtienen buenos resultados comparándolos con el \texttt
 
 % Salida por pantalla
 \maketable{\dataAMc}
+
+Con la optimización sobre los mejores individuos se obtienen resultados muy similares a los de los otros algoritmos meméticos, observando que en tiempos de ejecución se vuelve a los tiempos de ejecución en \texttt{Arrhythmia} de la aplicación de la BL a todos los individuos.
 
 
 \subsubsection{Comparación}
@@ -687,6 +723,8 @@ Para el \texttt{SFS} se obtienen buenos resultados comparándolos con el \texttt
 \end{tikzpicture}
 \end{center}
 
+	En cuanto a la tasa de acierto dentro de la muestra se observa que los tres algoritmos meméticos se comportan mejor que el algoritmo de control \texttt{KNN} y que el \texttt{SFS} (con la excepción de la BD \texttt{Arrhythmia}). Sin embargo entre ellos las diferencias no son significativas y se limitan a pocas décimas no sólo en \texttt{WDBC}, donde ya se ha comentado en otras prácticas que es muy difícil obtener una mejora significativa debido al alto nivel de acierto que se obtiene en esta BD, sino también en \texttt{Libras} y \texttt{Arrhythmia}. 
+
 \subsubsection{Tasa Out}
 \begin{center}
 \begin{tikzpicture}
@@ -718,6 +756,7 @@ Para el \texttt{SFS} se obtienen buenos resultados comparándolos con el \texttt
 \end{tikzpicture}
 \end{center}
 
+	Con respecto a la tasa de acierto fuera de la muestra también se obtienen resultados muy similares para los tres algoritmos, mejores que \texttt{SFS} en \texttt{WDBC} y \texttt{Libras} y que \texttt{KNN} en \texttt{Arrhtyhmia}.
 
 \subsubsection{Tasa reducción}
 \begin{center}
@@ -750,7 +789,9 @@ Para el \texttt{SFS} se obtienen buenos resultados comparándolos con el \texttt
 \end{tikzpicture}
 \end{center}
 
-
+	Por la implementación de los algoritmos para la decisión de las mejores soluciones, podemos considerar que la reducción del número de características seleccionadas no ha sido un objetivo principal, luego se espera una tasa de reducción no muy elevada y simplemente aquellas que ofrezcan una mayor tasa de acierto. Como vemos en los resultados obtenidos, estas tasas se sitúan en torno a un $55\%$ de reducción y son similares a las obtenidas con los algoritmos genéticos. La tasa más elevada (a excepción del algoritmo \texttt{SFS} que por su naturaleza \textit{greedy} obtiene tasas más altas) se corresponde con la optimización del $10\%$ de individuos seleccionados aleatoriamente en la base de datos \texttt{Arrhythmia}. En esta base de datos se suelen obtener una mayor tasa de acierto cuando la reducción es elevada, y es lo que se aprecia en la tabla de este algoritmo, donde la ejecución con la máxima reducción es la que tiene mayor tasa de acierto. En cambio vemos que en media aunque este algoritmo tenga una mayor tasa de reducción, la tasa de acierto es similar a la de los otros algoritmos meméticos.
+	
+	
 \subsubsection{Tiempos}
 
 \pgfplotstabletranspose[input colnames to=DB,columns={TW,TL,TA}]\dataTimes{\dataGlobal}
@@ -782,8 +823,161 @@ Para el \texttt{SFS} se obtienen buenos resultados comparándolos con el \texttt
 \end{tikzpicture}
 \end{center}
 
-No se han incluido los tiempos para \texttt{KNN} ni \texttt{SFS} debido a que no son relevantes con respecto a los algoritmos meméticos. 
+No se han incluido los tiempos para \texttt{KNN} ni \texttt{SFS} debido a que no son relevantes con respecto a los algoritmos meméticos. Como se ha comentado previamente, en las bases de datos pequeñas los tiempos son muy similares y es en \texttt{Arrhythmia} donde la ejecución es más rápida para el algoritmo con optimización en un $10\%$ aleatorio. Aunque los algoritmos están implementados para que se pueda probar con diferentes parámetros, teniendo en cuenta que la población es de tamaño 10 y que en el tercer algoritmo sólo se optimiza el $10\%$ mejor, es decir, el mejor individuo, podríamos haber seleccionado el máximo de la población y haber evitado reordenar la población, con lo que hubiese tardado menos.
 
+\subsection{Comparación algoritmos poblacionales}
+
+	En este apartado se comparan todos los algoritmos poblacionales implementados, tanto los genéticos de la práctica 3, como los meméticos que se piden en la práctica y la variante de los meméticos con la búsqueda local de alta intensidad, donde de la búsqueda local no se realiza sólo una iteración sino que se ejecuta hasta se alcanza un óptimo local. 
+
+\begin{adjustwidth}{-1cm}{}
+\resizebox{\linewidth}{!}{
+\pgfplotstabletypeset[
+	every head row/.style={
+		before row={%
+				\hline
+				& \multicolumn{4}{c|}{WDBC} & \multicolumn{4}{c|}{Movement Libras} & \multicolumn{4}{c|}{Arrhythmia}\\
+				\cline{2-13}
+		},
+		after row=\cline{2-13}\hline,
+		column type=c
+	},
+	columns={algorithm,inW,outW,redW,TW,inL,outL,redL,TL,inA,outA,redA,TA},
+	every first column/.style={ column type/.add={|}{} },
+	every last row/.style={after row=\hline},
+	column type/.add={}{|},
+	columns/algorithm/.style={column name = , string type},
+	columns/inW/.style={sci,  precision=4,column name =\%Clas. in},
+	columns/inL/.style={column name =\%Clas. in},	
+	columns/inA/.style={column name =\%Clas. in},
+	columns/outW/.style={column name =\%Clas. out},
+	columns/outL/.style={column name =\%Clas. out},	
+	columns/outA/.style={column name =\%Clas. out},
+	columns/TW/.style={column name =T},
+	columns/TA/.style={column name =T},
+	columns/TL/.style={column name =T},
+	columns/redW/.style={column name =\%red.},
+	columns/redL/.style={column name =\%red.},	
+	columns/redA/.style={column name =\%red.},
+	string type
+	]{\dataGlobalAI}
+}
+\end{adjustwidth}
+
+
+\subsubsection{Tasa In}
+\begin{center}
+\begin{tikzpicture}
+\begin{axis}[
+    ybar,
+    x=1.5cm,
+    xtick=data,% crucial line for the xticklabels directive
+    ylabel=Tasa IN,
+    ymin = 50,
+    legend style={at={(0.5,-0.15)},anchor=north,legend columns=-1},
+    xticklabels from table={\dataGlobalAI}{algorithm}
+    %,colorbrewer cycle list=Set1
+]
+\addplot table [
+    x=0,
+    y=inW
+]{\dataGlobalAI};
+
+\addplot table [
+    x=0,
+    y=inL
+]{\dataGlobalAI};
+
+\addplot  table [
+    x=0,
+    y=inA
+]{\dataGlobalAI};
+\legend{WDBC,Libras,Arrhythmia}
+\end{axis}
+\end{tikzpicture}
+\end{center}
+
+	En cuanto a la tasa de acierto dentro de la muestra, vemos que se obtiene de manera general una mejora de los algoritmos meméticos cuando se realiza la búsqueda local con una alta intensidad. En cuanto a la comparación de los algoritmos genéticos con los meméticos, vemos que el algoritmo genético generacional tiene unas tasas ligeramente superiores a las modificaciones con BL de baja intensidad, por lo que podríamos pensar en que es necesaria una mayor intensidad, quizá decrementando el número de generaciones que hay que esperar para que se realice la búsqueda local. El algoritmo con mejores resultados es el que realiza optimización local intensiva sobre los mejores individuos de la población.
+
+\subsubsection{Tasa Out}
+\begin{center}
+\begin{tikzpicture}
+\begin{axis}[
+    ybar,
+    x=1.5cm,
+    xtick=data,% crucial line for the xticklabels directive
+    ylabel=Tasa OUT,
+    ymin = 50,
+    legend style={at={(0.5,-0.15)},anchor=north,legend columns=-1},
+    xticklabels from table={\dataGlobalAI}{algorithm}
+]
+\addplot table [
+    x=0,
+    y=outW
+]{\dataGlobalAI};
+
+\addplot table [
+    x=0,
+    y=outL
+]{\dataGlobalAI};
+
+\addplot table [
+    x=0,
+    y=outA
+]{\dataGlobalAI};
+\legend{WDBC,Libras,Arrhythmia}
+\end{axis}
+\end{tikzpicture}
+\end{center}
+
+	En cuanto a la tasa de acierto fuera de la muestra se observa que todos los resultados son muy similares, con lo que no podemos realizar un análisis mayor que decir que los algoritmos con mejores resultados dentro de la muestra no se ven resentidos fuera y por tanto no hay un sobreajuste excesivo.
+
+\subsubsection{Tiempos}
+
+\pgfplotstabletranspose[input colnames to=DB,columns={TW,TL,TA}]\dataTimesAI{\dataGlobalAI}
+
+\begin{adjustwidth}{-1cm}{}
+\begin{center}
+\pgfplotstabletypeset[string type]\dataTimesAI
+\end{center}
+\end{adjustwidth}
+
+
+\begin{center}
+\begin{tikzpicture}
+\begin{axis}[
+    ybar,
+    ylabel=Tiempo (s),
+    ymin = 0,
+    legend style={at={(1.5,0.7)},anchor=north},
+    symbolic x coords={TW,TL,TA},
+    xticklabels={WDBC,Libras,Arrhythmia},
+    xtick=data% crucial line for the xticklabels directive
+]
+\addplot[sharp plot, color=green]
+	table [x=DB, y=0]	{\dataTimesAI};
+\addplot[sharp plot, color=green, dashed]
+	table [x=DB, y=1]	{\dataTimesAI};
+\addplot[sharp plot, color=blue]
+	table [x=DB, y=2]	{\dataTimesAI};
+\addplot[sharp plot, color = blue, dashed]
+	table [x=DB, y=3]	{\dataTimesAI};
+\addplot[sharp plot, color = red]
+	table [x=DB, y=4]	{\dataTimesAI};
+\addplot[sharp plot, color = red, dashed]
+	table [x=DB, y=5]	{\dataTimesAI};
+\addplot[sharp plot]
+	table [x=DB, y=6]	{\dataTimesAI};
+\addplot[sharp plot, dashed]
+	table [x=DB, y=7]	{\dataTimesAI};
+\legend{AGG-H, AGE-H, 
+		AM - 1, AM - 1- AI, 
+		AM - 0.1, AM - 0.1- AI, 
+		AM - 0.1 mejor, AM - 0.1 mejor - AI}
+\end{axis}
+\end{tikzpicture}
+\end{center}
+
+	En las bases de datos de menor tamaño los tiempos son muy similares, a excepción del algoritmo genético estacionario (recordemos que todos los algoritmos restantes tienen un esquema generacional) que es un poco superior. En cuanto a la base de datos \texttt{Arrhythmia}, los algoritmos con BL de alta intensidad tardan más, con especial relevancia para el algoritmo con optimización en todos los individuos de la población, que tarda un tiempo semejante al genético estacionario. Donde menos se nota es en el algoritmo memético con optimización del mejor individuo, donde, al estar ya cerca de un óptimo local, esta intensificación es menos costosa en tiempo (tenemos que tener en cuenta que podríamos hacer más rápido este algoritmo para este caso concreto si en lugar de ordenar y coger sólo uno buscásemos directamente el mejor individuo). Vemos también que el algoritmo genético generacional es el que menos tarda y sin embargo el algoritmo da buenos resultados, lo que nos muestra el buen desempeño de los algoritmos genéticos para este problema incluso antes de introducir la búsqueda local.
 
 \section{Bibliografía}
 \begin{itemize}

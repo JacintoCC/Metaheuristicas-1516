@@ -119,8 +119,8 @@ def main(args):
     db_options = {'W': 'wdbc', 'L': 'movement_libras', 'A':'arrhythmia'}
     alg_options = {'K': kNNSolution, 'S': greedySFS, '1': memetic1,
                    '2': memetic01, '3': memetic01mej}
-    alg_names = {'K': "KNN", 'S': "SFS", '1': "AM (10, 1)", '2': "AM (10, 0.1)",
-                 '3':"AM (10, 0.1-mej)"}
+    alg_names = {'K': "KNN", 'S': "SFS", '1': "AM1", '2': "AM01",
+                 '3':"AM01m"}
     class_row = {'W': 0, 'L': 90, 'A':253}
     bytes_to_int = {b'B': 0, b'M': 1}
 
